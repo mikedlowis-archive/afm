@@ -21,7 +21,7 @@ at_exit { Env.process }
 #------------------------------------------------------------------------------
 # Rake Tasks
 #------------------------------------------------------------------------------
-#task :default
+task :default => [:build]
 
 desc "Build the AFM release binary"
 task :build do
