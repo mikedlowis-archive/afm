@@ -2,6 +2,8 @@
 #include <stdbool.h>
 
 static bool Running = true;
+//static int Term_X = 0;
+//static int Term_Y = 0;
 static WINDOW* WindowLeft;
 static WINDOW* WindowRight;
 
@@ -33,11 +35,12 @@ int main(int argc, char** argv) {
     noecho();
     refresh();
     /* Create the left and right windows */
-    WindowLeft  = create_window(0,0,20,20);
-    WindowRight = create_window(20,0,20,20);
+    WindowLeft  = create_window(0,0,LINES,COLS/2);
+    WindowRight = create_window(COLS/2,0,LINES,COLS/2);
     while(Running) {
-        wprintw(WindowLeft,  "Left");
-        wprintw(WindowRight, "Right");
+        //getmaxyx(stdscr, Term_Y, Term_X);
+        wprintw(WindowLeft,  "\rLeft");
+        wprintw(WindowRight, "\rRight");
         wrefresh(WindowLeft);
         wrefresh(WindowRight);
         handle_input(getch());
