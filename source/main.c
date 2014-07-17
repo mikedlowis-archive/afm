@@ -1,12 +1,29 @@
 #include <ncurses.h>
 #include <stdbool.h>
 #include <signal.h>
+#include <stdlib.h>
 
 static bool Running = true;
 //static int Term_X = 0;
 //static int Term_Y = 0;
 static WINDOW* WindowLeft;
 static WINDOW* WindowRight;
+
+void list_files(WINDOW* win) {
+    FILE* ls = popen("ls", "r");
+    char* filename = NULL;
+    size_t len = 0;
+    ssize_t read;
+    int i = 1;
+    int rows, cols;
+    getmaxyx(win, rows, cols);
+    while ((read = getline(&filename, &len, ls)) != -1){
+        mvwaddnstr(win, i, 1, filename, cols-2); /* prevent spilling out of window with long filenames */
+        i++;
+        if(i>rows) break; /* TODO: implement scrolling to handle when there are more files than lines */
+    }
+    if(filename) free(filename);
+}
 
 void handle_input(char ch) {
     if(ch == 'q')
@@ -33,6 +50,7 @@ void update_screen(void) {
     /* Create the left and right windows */
     WindowLeft  = create_window(0,0,LINES,COLS/2);
     wprintw(WindowLeft,  "\rLeft");
+    list_files(WindowLeft);
     wrefresh(WindowLeft);
     WindowRight = create_window(COLS/2,0,LINES,COLS/2);
     wprintw(WindowRight, "\rRight");
