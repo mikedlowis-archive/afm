@@ -1,5 +1,6 @@
 #include <ncurses.h>
 #include <stdbool.h>
+#include <signal.h>
 
 static bool Running = true;
 //static int Term_X = 0;
@@ -27,22 +28,33 @@ void destroy_window(WINDOW* p_win) {
     delwin(p_win);
 }
 
+void update_screen(void) {
+    endwin();
+    /* Create the left and right windows */
+    WindowLeft  = create_window(0,0,LINES,COLS/2);
+    wprintw(WindowLeft,  "\rLeft");
+    wrefresh(WindowLeft);
+    WindowRight = create_window(COLS/2,0,LINES,COLS/2);
+    wprintw(WindowRight, "\rRight");
+    wrefresh(WindowRight);
+}
+
+void handle_signal(int sig) {
+    update_screen();
+    signal(SIGWINCH, handle_signal);
+}
+
 int main(int argc, char** argv) {
+    /* Handle terminal resizing */
+    signal(SIGWINCH, handle_signal);
     /* Initialize ncurses and user input settings */
     initscr();
     raw();
     keypad(stdscr, TRUE);
     noecho();
     refresh();
-    /* Create the left and right windows */
-    WindowLeft  = create_window(0,0,LINES,COLS/2);
-    WindowRight = create_window(COLS/2,0,LINES,COLS/2);
     while(Running) {
-        //getmaxyx(stdscr, Term_Y, Term_X);
-        wprintw(WindowLeft,  "\rLeft");
-        wprintw(WindowRight, "\rRight");
-        wrefresh(WindowLeft);
-        wrefresh(WindowRight);
+        update_screen();
         handle_input(getch());
     }
     destroy_window(WindowLeft);
