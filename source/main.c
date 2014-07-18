@@ -9,6 +9,7 @@ typedef struct {
 
 static bool Running = true;
 static bool Screen_Dirty = true;
+static int Idx = 0; /* TODO: this should be per-window */
 
 void list_files(void) {
     FILE* ls = popen("ls", "r");
@@ -28,7 +29,7 @@ void list_files(void) {
             attroff(A_BOLD);
         }
         i++;
-        if(i>ROWS) break; /* TODO: implement scrolling to handle when there are more files than lines */
+        if(i>LINES) break; /* TODO: implement scrolling to handle when there are more files than lines */
     }
     if(filename) free(filename);
 }
@@ -38,7 +39,7 @@ void update_screen(void) {
     endwin();
     clear();
     /* Draw the Contents */
-    // TODO
+    list_files();
     /* Draw the Border */
     mvaddch(0,       0,      ACS_ULCORNER);
     mvhline(0,       1,      ACS_HLINE, COLS-2);
@@ -54,7 +55,20 @@ void update_screen(void) {
 }
 
 void handle_input(char ch) {
-    if(ch == 'q') Running = false;
+    /* Assume screen is dirty by default */
+    bool is_screen_dirty = true;
+    /* Handle the key press */
+    switch(ch) {
+        case 'q': Running = false;
+                  break;
+        case 'j': Idx += 1;
+                  break;
+        case 'k': Idx -= 1;
+                  break;
+        default:  is_screen_dirty = false; // Screen is not actually dirty
+                  break;
+    };
+    Screen_Dirty = Screen_Dirty || is_screen_dirty;
 }
 
 void handle_signal(int sig) {
