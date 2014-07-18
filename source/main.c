@@ -9,6 +9,7 @@ typedef struct {
 
 static bool Running = true;
 static bool Screen_Dirty = true;
+static bool Resized = true;
 static int Idx = 0; /* TODO: this should be per-window */
 
 void list_files(void) {
@@ -36,7 +37,10 @@ void list_files(void) {
 
 void update_screen(void) {
     /* Clear screen and update LINES and COLS */
-    endwin();
+    if(Resized) {
+        endwin();
+        Resized = false;
+    }
     clear();
     /* Draw the Contents */
     list_files();
@@ -74,6 +78,7 @@ void handle_input(char ch) {
 void handle_signal(int sig) {
     signal(SIGWINCH, handle_signal);
     Screen_Dirty = true;
+    Resized = true;
 }
 
 int main(int argc, char** argv) {
