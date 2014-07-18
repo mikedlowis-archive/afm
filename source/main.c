@@ -16,6 +16,11 @@ static int Idx = 0; /* TODO: this should be per-window */
 static char Cwd[1024]; /* TODO; this should be per-window & smarter than 1024chars */
 static char** Files; /* TODO: this should be per-window */
 static int FileCount; /* TODO: ditto */
+static int TopIndex = 0; /* TODO: ditto */
+
+//number of lines to leave before/after dir contents
+static int TopBuffer = 2;
+static int BotBuffer = 2;
 
 bool is_dir(char* path){
     struct stat s;
@@ -83,10 +88,10 @@ void cd(int file_index){
             Cwd[i] = '/';
             i++;
         }
-        (void)cwdend;
         strcpy(&Cwd[i], Files[file_index]);
         //kill_newlines(Cwd);
         Idx=0;
+        TopIndex=0;
         //if not a directory, revert
         if(!is_dir(Cwd)) Cwd[cwdend]=0;
     }
@@ -94,8 +99,7 @@ void cd(int file_index){
 
 void list_files(WINDOW* win) {
     get_files();
-    int topbuff=2; /* lines to skip before printing (window border/title) */
-    int i = 0;
+    int i = TopIndex;
     int rows, cols;
     getmaxyx(win, rows, cols);
     wattron(win, A_UNDERLINE);
@@ -106,23 +110,31 @@ void list_files(WINDOW* win) {
             wattron(win, A_STANDOUT);
             wattron(win, A_BOLD);
         }
-        mvwaddnstr(win, i+topbuff, 1, Files[i], cols-2); /* prevent spilling out of window with long filenames */
+        mvwaddnstr(win, TopBuffer+i-TopIndex, 1, Files[i], cols-2); /* prevent spilling out of window with long filenames */
         if(i==Idx){
             wattroff(win, A_STANDOUT);
             wattroff(win, A_BOLD);
         }
         i++;
-        if((topbuff+i)>rows) break; /* TODO: implement scrolling to handle when there are more files than lines */
+        if((TopBuffer+i-TopIndex+BotBuffer)>rows) break;
     }
 }
 
 void handle_input(char ch) {
     if(ch == 'q')
         Running = false;
-    if(ch == 'j' && Idx<FileCount)
+    if(ch == 'j' && Idx<FileCount){
         Idx+=1;
-    if(ch == 'k' && Idx>0)
+        int rows,cols;
+        getmaxyx(stdscr, rows,cols);
+        (void) cols;
+        if((TopBuffer+Idx+BotBuffer)>rows)
+            TopIndex=Idx-(rows-TopBuffer-BotBuffer);
+    }
+    if(ch == 'k' && Idx>0){
         Idx-=1;
+        if(Idx<TopIndex) TopIndex=Idx;
+    }
     if(ch == 'e')
         cd(Idx);
 }
