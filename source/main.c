@@ -9,16 +9,27 @@ static bool Running = true;
 static WINDOW* WindowLeft;
 static WINDOW* WindowRight;
 
+static int Idx = 0; /* TODO: this should be per-window */
+
 void list_files(WINDOW* win) {
     FILE* ls = popen("ls", "r");
     char* filename = NULL;
     size_t len = 0;
     ssize_t read;
-    int i = 1;
+    int topbuff=1; /* lines to skip before printing (window border/title) */
+    int i = 0;
     int rows, cols;
     getmaxyx(win, rows, cols);
     while ((read = getline(&filename, &len, ls)) != -1){
-        mvwaddnstr(win, i, 1, filename, cols-2); /* prevent spilling out of window with long filenames */
+        if(i==Idx){
+            wattron(win, A_STANDOUT);
+            wattron(win, A_BOLD);
+        }
+        mvwaddnstr(win, i+topbuff, 1, filename, cols-2); /* prevent spilling out of window with long filenames */
+        if(i==Idx){
+            wattroff(win, A_STANDOUT);
+            wattroff(win, A_BOLD);
+        }
         i++;
         if(i>rows) break; /* TODO: implement scrolling to handle when there are more files than lines */
     }
@@ -28,6 +39,10 @@ void list_files(WINDOW* win) {
 void handle_input(char ch) {
     if(ch == 'q')
         Running = false;
+    if(ch == 'j')
+        Idx+=1;
+    if(ch == 'k' && Idx>0)
+        Idx-=1;
 }
 
 WINDOW* create_window(int x, int y, int height, int width) {
