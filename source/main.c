@@ -10,9 +10,27 @@ typedef struct {
 static bool Running = true;
 static bool Screen_Dirty = true;
 
-void handle_input(char ch) {
-    if(ch == 'q')
-        Running = false;
+void list_files(void) {
+    FILE* ls = popen("ls", "r");
+    char* filename = NULL;
+    size_t len = 0;
+    ssize_t read;
+    int topbuff=1; /* lines to skip before printing (window border/title) */
+    int i = 0;
+    while ((read = getline(&filename, &len, ls)) != -1){
+        if(i==Idx){
+            attron(A_STANDOUT);
+            attron(A_BOLD);
+        }
+        mvaddnstr(i+topbuff, 1, filename, COLS-2); /* prevent spilling out of window with long filenames */
+        if(i==Idx){
+            attroff(A_STANDOUT);
+            attroff(A_BOLD);
+        }
+        i++;
+        if(i>ROWS) break; /* TODO: implement scrolling to handle when there are more files than lines */
+    }
+    if(filename) free(filename);
 }
 
 void update_screen(void) {
@@ -33,6 +51,10 @@ void update_screen(void) {
     /* Refresh and mark complete */
     refresh();
     Screen_Dirty = false;
+}
+
+void handle_input(char ch) {
+    if(ch == 'q') Running = false;
 }
 
 void handle_signal(int sig) {
