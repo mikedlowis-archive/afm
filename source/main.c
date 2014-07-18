@@ -10,22 +10,52 @@ static WINDOW* WindowLeft;
 static WINDOW* WindowRight;
 
 static int Idx = 0; /* TODO: this should be per-window */
+//static char* Cwd = ""; /* TODO; this should be per-window */
+static char** Files; /* TODO: this should be per-window */
+static int FileCount; /* TODO: ditto */
 
-void list_files(WINDOW* win) {
+/* TODO redraw less frequently */
+/* TODO detect filesystem changes */
+
+/*TODO: when have collection of windows and ^^ vars are in a struct, should take a windex*/
+void get_files(){
+    /*free existing contents*/
+    int i=0;
+    if(Files){
+        /*fuck memory (this is broken)
+        while(Files[i]){
+            free(Files[i]);
+            i++;
+        }*/
+        free(Files);
+    }
+    /* TODO: malloc smartly, instead of tapping out at 1024 files */
+    Files = malloc(sizeof(char*)*1024);
+    Files[0] = ".."; /* parent directory; todo only add if cwd!=/ */
     FILE* ls = popen("ls", "r");
-    char* filename = NULL;
     size_t len = 0;
     ssize_t read;
+    i=1;
+    while ((read = getline(&Files[i], &len, ls)) != -1){
+        i++;
+        if(i>1022) break;
+    }
+    FileCount=i-1;
+    Files[i]=0; /*always end with nullpointer */
+}
+
+void list_files(WINDOW* win) {
+    get_files();
     int topbuff=1; /* lines to skip before printing (window border/title) */
     int i = 0;
     int rows, cols;
     getmaxyx(win, rows, cols);
-    while ((read = getline(&filename, &len, ls)) != -1){
+    while (Files[i] != 0){
         if(i==Idx){
             wattron(win, A_STANDOUT);
             wattron(win, A_BOLD);
         }
-        mvwaddnstr(win, i+topbuff, 1, filename, cols-2); /* prevent spilling out of window with long filenames */
+        mvwaddnstr(win, i+topbuff, 1, Files[i], cols-2); /* prevent spilling out of window with long filenames */
         if(i==Idx){
             wattroff(win, A_STANDOUT);
             wattroff(win, A_BOLD);
@@ -33,13 +63,12 @@ void list_files(WINDOW* win) {
         i++;
         if(i>rows) break; /* TODO: implement scrolling to handle when there are more files than lines */
     }
-    if(filename) free(filename);
 }
 
 void handle_input(char ch) {
     if(ch == 'q')
         Running = false;
-    if(ch == 'j')
+    if(ch == 'j' && Idx<FileCount)
         Idx+=1;
     if(ch == 'k' && Idx>0)
         Idx-=1;
