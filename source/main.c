@@ -6,21 +6,20 @@
 #include <string.h>
 #include <sys/stat.h>
 
-static bool Running = true;
-//static int Term_X = 0;
-//static int Term_Y = 0;
-
 typedef struct {
     int idx;
     char cwd[1024];
     char **files;
     int file_count;
     int top_index;
-    WINDOW* win;
-} window_t;
+    char* title;
+} Window_T;
 
-/*todo: arbitrary number of windows */
-static window_t Windows[2];
+static bool Running = true;
+static bool Screen_Dirty = true;
+static bool Resized = true;
+/*TODO: arbitrary number of windows */
+static Window_T Windows[1];
 static int FocusedWindex = 0;
 
 //number of lines to leave before/after dir contents
@@ -103,29 +102,28 @@ void list_files(int windex) {
     get_files(windex);
     int i = Windows[windex].top_index;
     int rows, cols;
-    getmaxyx(Windows[windex].win, rows, cols);
-    wattron(Windows[windex].win, A_UNDERLINE);
-    mvwaddnstr(Windows[windex].win, 1, 1, &Windows[windex].cwd, cols-2);
-    wattroff(Windows[windex].win, A_UNDERLINE);
+    getmaxyx(stdscr, rows, cols);
+    attron(A_UNDERLINE);
+    mvaddnstr(1, 1, &Windows[windex].cwd, cols-2);
+    attroff(A_UNDERLINE);
     while (Windows[windex].files[i] != 0){
         if(i==Windows[windex].idx){
-            wattron(Windows[windex].win, A_STANDOUT);
-            wattron(Windows[windex].win, A_BOLD);
+            attron(A_STANDOUT);
+            attron(A_BOLD);
         }
-        mvwaddnstr(Windows[windex].win, TopBuffer+i-Windows[windex].top_index, 1, Windows[windex].files[i], cols-2);
+        mvaddnstr(TopBuffer+i-Windows[windex].top_index, 1, Windows[windex].files[i], cols-2);
         if(i == Windows[windex].idx){
-            wattroff(Windows[windex].win, A_STANDOUT);
-            wattroff(Windows[windex].win, A_BOLD);
+            attroff(A_STANDOUT);
+            attroff(A_BOLD);
         }
         i++;
         if((TopBuffer+i-Windows[windex].top_index+BotBuffer) > rows) break;
     }
 }
 
-void handle_input(char ch) {
-    if(ch == 'q')
-        Running = false;
-    if(ch == 'j' && Windows[FocusedWindex].idx < Windows[FocusedWindex].file_count){
+void scroll_down(){
+    //do nothing if at the end of the file list
+    if(Windows[FocusedWindex].idx < Windows[FocusedWindex].file_count){
         Windows[FocusedWindex].idx += 1;
         int rows,cols;
         getmaxyx(stdscr, rows,cols);
@@ -133,45 +131,61 @@ void handle_input(char ch) {
         if((TopBuffer+Windows[FocusedWindex].idx+BotBuffer) > rows)
             Windows[FocusedWindex].top_index = Windows[FocusedWindex].idx-(rows-TopBuffer-BotBuffer);
     }
-    if(ch == 'k' && Windows[FocusedWindex].idx > 0){
+}
+void scroll_up(){
+    //do nothing if at the top of the file list
+    if(Windows[FocusedWindex].idx > 0){
         Windows[FocusedWindex].idx -= 1;
         if(Windows[FocusedWindex].idx < Windows[FocusedWindex].top_index)
             Windows[FocusedWindex].top_index = Windows[FocusedWindex].idx;
     }
-    if(ch == 'e')
-        cd(FocusedWindex);
-}
-
-WINDOW* create_window(int x, int y, int height, int width) {
-    WINDOW* p_win = newwin(height, width, y, x);
-    box(p_win, 0, 0);
-    wrefresh(p_win);
-    return p_win;
-}
-
-void destroy_window(WINDOW* p_win) {
-    /* Erase remnants of the window */
-    wborder(p_win, ' ', ' ', ' ',' ',' ',' ',' ',' ');
-    wrefresh(p_win);
-    /* Delete the window */
-    delwin(p_win);
 }
 
 void update_screen(void) {
-    endwin();
-    /* Create the left and right windows */
-    Windows[0].win  = create_window(0,0,LINES,COLS/2);
-    wprintw(Windows[0].win,  "\rLeft");
-    list_files(0);
-    wrefresh(Windows[0].win);
-    Windows[1].win = create_window(COLS/2,0,LINES,COLS/2);
-    wprintw(Windows[1].win, "\rRight");
-    wrefresh(Windows[1].win);
+    /* Clear screen and update LINES and COLS */
+    if(Resized){
+        endwin();
+        Resized = false;
+    }
+    clear();
+    //should probably redraw all, but since only one window exists, it doesn't matter
+    list_files(FocusedWindex);
+    /* Draw the Border */
+    mvaddch(0,       0,      ACS_ULCORNER);
+    mvhline(0,       1,      ACS_HLINE, COLS-2);
+    mvaddch(0,       COLS-1, ACS_URCORNER);
+    mvvline(1,       0,      ACS_VLINE, LINES-2);
+    mvaddch(LINES-1, 0,      ACS_LLCORNER);
+    mvhline(LINES-1, 1,      ACS_HLINE, COLS-2);
+    mvaddch(LINES-1, COLS-1, ACS_LRCORNER);
+    mvvline(1,       COLS-1, ACS_VLINE, LINES-2);
+    /* Refresh and mark complete */
+    refresh();
+    Screen_Dirty = false;
+}
+
+void handle_input(char ch) {
+    /* Assume screen is dirty by default */
+    bool is_screen_dirty = true;
+    switch(ch){
+        case 'q': Running = false;
+                  break;
+        case 'j': scroll_down();
+                  break;
+        case 'k': scroll_up();
+                  break;
+        case 'e': cd(FocusedWindex);
+                  break;
+        default:  is_screen_dirty = false;
+                  break;
+    }
+    Screen_Dirty = Screen_Dirty || is_screen_dirty;
 }
 
 void handle_signal(int sig) {
-    update_screen();
     signal(SIGWINCH, handle_signal);
+    Screen_Dirty = true;
+    Resized = true;
 }
 
 void init_window_t(windex){
@@ -188,13 +202,14 @@ int main(int argc, char** argv) {
     raw();
     keypad(stdscr, TRUE);
     noecho();
+    timeout(25);
     refresh();
     while(Running) {
-        update_screen();
+        if(Screen_Dirty) update_screen();
         handle_input(getch());
     }
-    destroy_window(Windows[0].win);
-    destroy_window(Windows[1].win);
+    clear();
     endwin();
     return 0;
 }
+
