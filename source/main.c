@@ -9,14 +9,19 @@
 static bool Running = true;
 //static int Term_X = 0;
 //static int Term_Y = 0;
-static WINDOW* WindowLeft;
-static WINDOW* WindowRight;
 
-static int Idx = 0; /* TODO: this should be per-window */
-static char Cwd[1024]; /* TODO; this should be per-window & smarter than 1024chars */
-static char** Files; /* TODO: this should be per-window */
-static int FileCount; /* TODO: ditto */
-static int TopIndex = 0; /* TODO: ditto */
+typedef struct {
+    int idx;
+    char cwd[1024];
+    char **files;
+    int file_count;
+    int top_index;
+    WINDOW* win;
+} window_t;
+
+/*todo: arbitrary number of windows */
+static window_t Windows[2];
+static int FocusedWindex = 0;
 
 //number of lines to leave before/after dir contents
 static int TopBuffer = 2;
@@ -27,116 +32,114 @@ bool is_dir(char* path){
     if( stat(path, &s) == 0){
         return (s.st_mode & S_IFDIR);
     }/*else error*/
+    /*TODO: handle symlinks*/
     return false;
 }
 
 /* TODO redraw less frequently */
 /* TODO detect filesystem changes */
 
-/*TODO: when have collection of windows and ^^ vars are in a struct, should take a windex*/
-void get_files(){
+void get_files(int windex){
     /*free existing contents*/
     int i=0;
-    if(Files){
+    if(Windows[windex].files){
         /*fuck memory (this is broken)
         while(Files[i]){
             free(Files[i]);
             i++;
         }*/
-        free(Files);
+        free(Windows[windex].files);
     }
     /* TODO: malloc smartly, instead of tapping out at 1024 files */
-    Files = malloc(sizeof(char*)*1024);
-    Files[0] = ".."; /* parent directory; todo only add if cwd!=/ */
-    char cmd[1028]="ls ";
-    strcpy(&cmd[3],Cwd);
+    Windows[windex].files = malloc(sizeof(char*) * 1024);
+    Windows[windex].files[0] = ".."; /* parent directory; TODO only add if cwd!=/ */
+    char cmd[1028] = "ls ";
+    strcpy(&cmd[3], Windows[windex].cwd);
     FILE* ls = popen(cmd, "r");
     size_t len = 0;
     ssize_t read;
-    i=1;
-    while ((read = getline(&Files[i], &len, ls)) != -1){
-        if(Files[i][read-1] == '\n') Files[i][read-1] = 0;
+    i = 1;
+    while ((read = getline(&Windows[windex].files[i], &len, ls)) != -1){
+        if(Windows[windex].files[i][read-1] == '\n') Windows[windex].files[i][read-1] = 0;
         i++;
         if(i>1022) break;
     }
-    FileCount=i-1;
-    Files[i]=0; /*always end with nullpointer */
+    Windows[windex].file_count = i-1;
+    Windows[windex].files[i] = 0; /*always end with nullpointer; since file_count is a thing, can probably do without this*/
 }
 
-void cd(int file_index){
+void cd(int windex){
     int last_slash=0, i=0;
     bool ends_with_slash = false;
-    while(Cwd[i] != 0){
-        if(Cwd[i] == '/')
-            last_slash=i;
+    while(Windows[windex].cwd[i] != 0){
+        if(Windows[windex].cwd[i] == '/')
+            last_slash = i;
         i++;
     }
-    if(last_slash==i-1) { /* should only be true for root */
-        ends_with_slash = true;
-    }
-    if(file_index==0) { /* up */
-        //truncate Cwd including the last slash
-        Cwd[last_slash]=0;
-        if(last_slash==0){ /*but dont have an empty cwd */
-            Cwd[0]='/';
-            Cwd[1]=0;
+    ends_with_slash = (last_slash == (i-1)); /* should only be true for root */
+    if(Windows[windex].idx == 0) { /* up */
+        //truncate cwd including the last slash
+        Windows[windex].cwd[last_slash]=0;
+        if(last_slash==0){ //at root. fixitfixitfixit.
+            Windows[windex].cwd[0]='/';
+            Windows[windex].cwd[1]=0;
         }
     }else{
-        //add file to Cwd:
+        //add file to cwd:
         int cwdend = i;
         if(!ends_with_slash){
-            Cwd[i] = '/';
+            Windows[windex].cwd[i] = '/';
             i++;
         }
-        strcpy(&Cwd[i], Files[file_index]);
-        //kill_newlines(Cwd);
-        Idx=0;
-        TopIndex=0;
+        strcpy(&Windows[windex].cwd[i], Windows[windex].files[Windows[windex].idx]);
+        Windows[windex].idx = 0;
+        Windows[windex].top_index = 0;
         //if not a directory, revert
-        if(!is_dir(Cwd)) Cwd[cwdend]=0;
+        if(!is_dir(Windows[windex].cwd)) Windows[windex].cwd[cwdend]=0;
     }
 }
 
-void list_files(WINDOW* win) {
-    get_files();
-    int i = TopIndex;
+void list_files(int windex) {
+    get_files(windex);
+    int i = Windows[windex].top_index;
     int rows, cols;
-    getmaxyx(win, rows, cols);
-    wattron(win, A_UNDERLINE);
-    mvwaddnstr(win, 1, 1, &Cwd, cols-2);
-    wattroff(win, A_UNDERLINE);
-    while (Files[i] != 0){
-        if(i==Idx){
-            wattron(win, A_STANDOUT);
-            wattron(win, A_BOLD);
+    getmaxyx(Windows[windex].win, rows, cols);
+    wattron(Windows[windex].win, A_UNDERLINE);
+    mvwaddnstr(Windows[windex].win, 1, 1, &Windows[windex].cwd, cols-2);
+    wattroff(Windows[windex].win, A_UNDERLINE);
+    while (Windows[windex].files[i] != 0){
+        if(i==Windows[windex].idx){
+            wattron(Windows[windex].win, A_STANDOUT);
+            wattron(Windows[windex].win, A_BOLD);
         }
-        mvwaddnstr(win, TopBuffer+i-TopIndex, 1, Files[i], cols-2); /* prevent spilling out of window with long filenames */
-        if(i==Idx){
-            wattroff(win, A_STANDOUT);
-            wattroff(win, A_BOLD);
+        mvwaddnstr(Windows[windex].win, TopBuffer+i-Windows[windex].top_index, 1, Windows[windex].files[i], cols-2);
+        if(i == Windows[windex].idx){
+            wattroff(Windows[windex].win, A_STANDOUT);
+            wattroff(Windows[windex].win, A_BOLD);
         }
         i++;
-        if((TopBuffer+i-TopIndex+BotBuffer)>rows) break;
+        if((TopBuffer+i-Windows[windex].top_index+BotBuffer) > rows) break;
     }
 }
 
 void handle_input(char ch) {
     if(ch == 'q')
         Running = false;
-    if(ch == 'j' && Idx<FileCount){
-        Idx+=1;
+    if(ch == 'j' && Windows[FocusedWindex].idx < Windows[FocusedWindex].file_count){
+        Windows[FocusedWindex].idx += 1;
         int rows,cols;
         getmaxyx(stdscr, rows,cols);
         (void) cols;
-        if((TopBuffer+Idx+BotBuffer)>rows)
-            TopIndex=Idx-(rows-TopBuffer-BotBuffer);
+        if((TopBuffer+Windows[FocusedWindex].idx+BotBuffer) > rows)
+            Windows[FocusedWindex].top_index = Windows[FocusedWindex].idx-(rows-TopBuffer-BotBuffer);
     }
-    if(ch == 'k' && Idx>0){
-        Idx-=1;
-        if(Idx<TopIndex) TopIndex=Idx;
+    if(ch == 'k' && Windows[FocusedWindex].idx > 0){
+        Windows[FocusedWindex].idx -= 1;
+        if(Windows[FocusedWindex].idx < Windows[FocusedWindex].top_index)
+            Windows[FocusedWindex].top_index = Windows[FocusedWindex].idx;
     }
     if(ch == 'e')
-        cd(Idx);
+        cd(FocusedWindex);
 }
 
 WINDOW* create_window(int x, int y, int height, int width) {
@@ -157,13 +160,13 @@ void destroy_window(WINDOW* p_win) {
 void update_screen(void) {
     endwin();
     /* Create the left and right windows */
-    WindowLeft  = create_window(0,0,LINES,COLS/2);
-    wprintw(WindowLeft,  "\rLeft");
-    list_files(WindowLeft);
-    wrefresh(WindowLeft);
-    WindowRight = create_window(COLS/2,0,LINES,COLS/2);
-    wprintw(WindowRight, "\rRight");
-    wrefresh(WindowRight);
+    Windows[0].win  = create_window(0,0,LINES,COLS/2);
+    wprintw(Windows[0].win,  "\rLeft");
+    list_files(0);
+    wrefresh(Windows[0].win);
+    Windows[1].win = create_window(COLS/2,0,LINES,COLS/2);
+    wprintw(Windows[1].win, "\rRight");
+    wrefresh(Windows[1].win);
 }
 
 void handle_signal(int sig) {
@@ -171,8 +174,13 @@ void handle_signal(int sig) {
     signal(SIGWINCH, handle_signal);
 }
 
+void init_window_t(windex){
+    Windows[windex].idx = 0;
+    getcwd(Windows[windex].cwd, 1024);
+}
+    
 int main(int argc, char** argv) {
-    getcwd(Cwd, sizeof(Cwd)); /* TODO: check for errors; fix in windows */
+    init_window_t(0);
     /* Handle terminal resizing */
     signal(SIGWINCH, handle_signal);
     /* Initialize ncurses and user input settings */
@@ -185,8 +193,8 @@ int main(int argc, char** argv) {
         update_screen();
         handle_input(getch());
     }
-    destroy_window(WindowLeft);
-    destroy_window(WindowRight);
+    destroy_window(Windows[0].win);
+    destroy_window(Windows[1].win);
     endwin();
     return 0;
 }
