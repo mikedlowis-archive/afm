@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 
 #include "aardvark.h"
+#include "state.h"
 
 typedef struct {
     int idx;
@@ -17,13 +18,8 @@ typedef struct {
     char* title;
 } Window_T;
 
-static bool Running = true;
-static bool Screen_Dirty = true;
-static bool Resized = true;
 /*TODO: arbitrary number of windows */
 static Window_T Windows[1];
-static int FocusedWindex = 0;
-static bool AardvarkOn = false;
 
 //number of lines to leave before/after dir contents
 static int TopBuffer = 2;
@@ -124,35 +120,37 @@ void list_files(int windex) {
 }
 
 void scroll_down(){
+    int index = state_get_focused_frame();
     //do nothing if at the end of the file list
-    if(Windows[FocusedWindex].idx < Windows[FocusedWindex].file_count){
-        Windows[FocusedWindex].idx += 1;
+    if(Windows[index].idx < Windows[index].file_count){
+        Windows[index].idx += 1;
         int rows,cols;
         getmaxyx(stdscr, rows,cols);
         (void) cols;
-        if((TopBuffer+Windows[FocusedWindex].idx+BotBuffer) > rows)
-            Windows[FocusedWindex].top_index = Windows[FocusedWindex].idx-(rows-TopBuffer-BotBuffer);
+        if((TopBuffer+Windows[index].idx+BotBuffer) > rows)
+            Windows[index].top_index = Windows[index].idx-(rows-TopBuffer-BotBuffer);
     }
 }
 void scroll_up(){
+    int index = state_get_focused_frame();
     //do nothing if at the top of the file list
-    if(Windows[FocusedWindex].idx > 0){
-        Windows[FocusedWindex].idx -= 1;
-        if(Windows[FocusedWindex].idx < Windows[FocusedWindex].top_index)
-            Windows[FocusedWindex].top_index = Windows[FocusedWindex].idx;
+    if(Windows[index].idx > 0){
+        Windows[index].idx -= 1;
+        if(Windows[index].idx < Windows[index].top_index)
+            Windows[index].top_index = Windows[index].idx;
     }
 }
 
 void update_screen(void) {
     /* Clear screen and update LINES and COLS */
-    if(Resized){
+    if(state_get_screen_resized()){
         endwin();
-        Resized = false;
+        state_set_screen_resized(false);
     }
     clear();
     //should probably redraw all, but since only one window exists, it doesn't matter
-    list_files(FocusedWindex);
-    if(AardvarkOn) aardvark_draw();
+    list_files(state_get_focused_frame());
+    if(state_get_aardvark_mode()) aardvark_draw();
     /* Draw the Border */
     mvaddch(0,       0,      ACS_ULCORNER);
     mvhline(0,       1,      ACS_HLINE, COLS-2);
@@ -164,33 +162,34 @@ void update_screen(void) {
     mvvline(1,       COLS-1, ACS_VLINE, LINES-2);
     /* Refresh and mark complete */
     refresh();
-    Screen_Dirty = false;
+    state_set_screen_dirty(false);
 }
 
 void handle_input(char ch) {
     /* Assume screen is dirty by default */
     bool is_screen_dirty = true;
     switch(ch){
-        case 'a': AardvarkOn = !AardvarkOn;
+        case 'a': state_set_aardvark_mode(!state_get_aardvark_mode());
                   break;
-        case 'q': Running = false;
+        case 'q': state_set_running(false);
                   break;
         case 'j': scroll_down();
                   break;
         case 'k': scroll_up();
                   break;
-        case 'e': cd(FocusedWindex);
+        case 'e': cd(state_get_focused_frame());
                   break;
         default:  is_screen_dirty = false;
                   break;
     }
-    Screen_Dirty = Screen_Dirty || is_screen_dirty;
+    /* Update the screen if we need to */
+    state_set_screen_dirty(state_get_screen_dirty() || is_screen_dirty);
 }
 
 void handle_signal(int sig) {
     signal(SIGWINCH, handle_signal);
-    Screen_Dirty = true;
-    Resized = true;
+    state_set_screen_dirty(true);
+    state_set_screen_resized(true);
 }
 
 void init_window_t(windex){
@@ -201,7 +200,7 @@ void init_window_t(windex){
 int main(int argc, char** argv) {
     init_window_t(0);
     /* Handle terminal resizing */
-    //signal(SIGWINCH, handle_signal);
+    signal(SIGWINCH, handle_signal);
     /* Initialize ncurses and user input settings */
     initscr();
     raw();
@@ -209,8 +208,8 @@ int main(int argc, char** argv) {
     noecho();
     timeout(25);
     refresh();
-    while(Running) {
-        if(Screen_Dirty) update_screen();
+    while(state_get_running()) {
+        if(state_get_screen_dirty()) update_screen();
         handle_input(getch());
     }
     erase();
