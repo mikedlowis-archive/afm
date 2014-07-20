@@ -1,0 +1,4 @@
+[submodule "modules/data-structures"]
+	path = modules/data-structures
+	url = https://github.com/mikedlowis/data-structures.git
+	branch = development
