@@ -25,8 +25,6 @@ static int BotBuffer = 2;
 
 static void get_files(int windex);
 
-void dumdestruct(void* lol){ }
-
 static bool is_dir(char* path) {
     struct stat s;
     if( stat(path, &s) == 0){
@@ -123,7 +121,7 @@ void workdir_ls(void) {
 static void get_files(int windex){
     int i=0;
     if(Windows[windex].vfiles) mem_release(Windows[windex].vfiles);
-    char* dotdot = mem_allocate(sizeof(char)*3, dumdestruct);
+    char* dotdot = mem_allocate(sizeof(char)*3, NULL);
     strcpy(dotdot, "..");
     Windows[windex].vfiles = vec_new(1, dotdot); /* TODO: check if cwd = / */
     char cmd[1028] = "ls ";
@@ -135,7 +133,7 @@ static void get_files(int windex){
     i = 1;
     while ((read = getline(&filename, &len, ls)) != -1){
         filename[read-1]=0; //remove ending newline
-        char* lol = mem_allocate(read*sizeof(char), dumdestruct);
+        char* lol = mem_allocate(read*sizeof(char), NULL);
         strcpy(lol, filename);
         vec_push_back(Windows[windex].vfiles, lol);
         i++;
