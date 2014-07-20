@@ -6,13 +6,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <vec.h>
+#include <mem.h>
 
 typedef struct {
     int idx;
     char cwd[1024];
-    char **files;
     vec_t* vfiles;
-    int file_count;
     int top_index;
     char* title;
 } Window_T;
@@ -25,6 +24,8 @@ static int TopBuffer = 2;
 static int BotBuffer = 2;
 
 static void get_files(int windex);
+
+void dumdestruct(void* lol){ }
 
 static bool is_dir(char* path) {
     struct stat s;
@@ -43,7 +44,7 @@ void workdir_init(int windex) {
 void workdir_next(void) {
     int index = state_get_focused_frame();
     //do nothing if at the end of the file list
-    if(Windows[index].idx < Windows[index].file_count){
+    if(Windows[index].idx < vec_size(Windows[index].vfiles)){
         Windows[index].idx += 1;
         int rows,cols;
         getmaxyx(stdscr, rows,cols);
@@ -87,7 +88,7 @@ void workdir_cd(void) {
             Windows[windex].cwd[i] = '/';
             i++;
         }
-        strcpy(&Windows[windex].cwd[i], Windows[windex].files[Windows[windex].idx]);
+        strcpy(&Windows[windex].cwd[i], vec_at(Windows[windex].vfiles, Windows[windex].idx));
         Windows[windex].idx = 0;
         Windows[windex].top_index = 0;
         //if not a directory, revert
@@ -104,12 +105,12 @@ void workdir_ls(void) {
     attron(A_UNDERLINE);
     mvaddnstr(1, 1, Windows[windex].cwd, cols-2);
     attroff(A_UNDERLINE);
-    while (Windows[windex].files[i] != 0){
-        if(i==Windows[windex].idx){
+    while (i < vec_size(Windows[windex].vfiles)){
+        if(i == Windows[windex].idx){
             attron(A_STANDOUT);
             attron(A_BOLD);
         }
-        mvaddnstr(TopBuffer+i-Windows[windex].top_index, 1, Windows[windex].files[i], cols-2);
+        mvaddnstr(TopBuffer+i-Windows[windex].top_index, 1, vec_at(Windows[windex].vfiles, i), cols-2);
         if(i == Windows[windex].idx){
             attroff(A_STANDOUT);
             attroff(A_BOLD);
@@ -120,34 +121,23 @@ void workdir_ls(void) {
 }
 
 static void get_files(int windex){
-    /*free existing contents*/
     int i=0;
-    if(Windows[windex].files){
-        /*fuck memory (this is broken)
-        while(Files[i]){
-            free(Files[i]);
-            i++;
-        }*/
-        free(Windows[windex].files);
-    }
-    /* TODO: malloc smartly, instead of tapping out at 1024 files */
-    Windows[windex].files = malloc(sizeof(char*) * 1024);
-    Windows[windex].files[0] = ".."; /* parent directory; TODO only add if cwd!=/ */
+    //TODO: free vfiles
+    Windows[windex].vfiles = vec_new(1, ".."); /* TODO: check if cwd = / */
     char cmd[1028] = "ls ";
     strcpy(&cmd[3], Windows[windex].cwd);
     FILE* ls = popen(cmd, "r");
-    size_t len = 0;
+    size_t len = 0; //unused. reflects sized allocated for buffer (filename) by getline
     ssize_t read;
     char* filename=0;
     i = 1;
     while ((read = getline(&filename, &len, ls)) != -1){
         filename[read-1]=0; //remove ending newline
-        Windows[windex].files[i] = filename;
+        char* lol = mem_allocate(read*sizeof(char), dumdestruct);
+        strcpy(lol, filename);
+        vec_push_back(Windows[windex].vfiles, lol);
         i++;
         if(i>1022) break;
-        filename=0;
     }
-    Windows[windex].file_count = i-1;
-    Windows[windex].files[i] = 0; /*always end with nullpointer; since file_count is a thing, can probably do without this*/
 }
 
