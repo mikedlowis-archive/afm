@@ -44,7 +44,7 @@ void workdir_init(int windex) {
 void workdir_next(void) {
     int index = state_get_focused_frame();
     //do nothing if at the end of the file list
-    if(Windows[index].idx < vec_size(Windows[index].vfiles)){
+    if(Windows[index].idx < vec_size(Windows[index].vfiles)-1){
         Windows[index].idx += 1;
         int rows,cols;
         getmaxyx(stdscr, rows,cols);
@@ -122,8 +122,10 @@ void workdir_ls(void) {
 
 static void get_files(int windex){
     int i=0;
-    //TODO: free vfiles
-    Windows[windex].vfiles = vec_new(1, ".."); /* TODO: check if cwd = / */
+    if(Windows[windex].vfiles) mem_release(Windows[windex].vfiles);
+    char* dotdot = mem_allocate(sizeof(char)*3, dumdestruct);
+    strcpy(dotdot, "..");
+    Windows[windex].vfiles = vec_new(1, dotdot); /* TODO: check if cwd = / */
     char cmd[1028] = "ls ";
     strcpy(&cmd[3], Windows[windex].cwd);
     FILE* ls = popen(cmd, "r");
