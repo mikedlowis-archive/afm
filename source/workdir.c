@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 typedef struct {
     int idx;
@@ -29,6 +30,11 @@ static bool is_dir(char* path) {
         return (s.st_mode & S_IFDIR);
     }/*else error*/
     return false;
+}
+
+void workdir_init(int windex) {
+    Windows[windex].idx = 0;
+    getcwd(Windows[windex].cwd, 1024);
 }
 
 void workdir_next(void) {
