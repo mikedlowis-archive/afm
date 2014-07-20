@@ -5,11 +5,13 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vec.h>
 
 typedef struct {
     int idx;
     char cwd[1024];
     char **files;
+    vec_t* vfiles;
     int file_count;
     int top_index;
     char* title;
@@ -35,6 +37,7 @@ static bool is_dir(char* path) {
 void workdir_init(int windex) {
     Windows[windex].idx = 0;
     getcwd(Windows[windex].cwd, 1024);
+    Windows[windex].vfiles = vec_new(0);
 }
 
 void workdir_next(void) {
@@ -135,12 +138,16 @@ static void get_files(int windex){
     FILE* ls = popen(cmd, "r");
     size_t len = 0;
     ssize_t read;
+    char* filename=0;
     i = 1;
-    while ((read = getline(&Windows[windex].files[i], &len, ls)) != -1){
-        if(Windows[windex].files[i][read-1] == '\n') Windows[windex].files[i][read-1] = 0;
+    while ((read = getline(&filename, &len, ls)) != -1){
+        filename[read-1]=0; //remove ending newline
+        Windows[windex].files[i] = filename;
         i++;
         if(i>1022) break;
+        filename=0;
     }
     Windows[windex].file_count = i-1;
     Windows[windex].files[i] = 0; /*always end with nullpointer; since file_count is a thing, can probably do without this*/
 }
+
