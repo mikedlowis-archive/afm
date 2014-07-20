@@ -10,10 +10,18 @@ end
 require 'rscons'
 
 #------------------------------------------------------------------------------
+# Checkout Git Submodules
+#------------------------------------------------------------------------------
+if Dir['modules/**/.git'].length == 0
+  sh 'git submodule update --init'
+end
+
+#------------------------------------------------------------------------------
 # Build Environment
 #------------------------------------------------------------------------------
 Env = Rscons::Environment.new do |env|
-  env['CFLAGS'] += ['-Wall', '-Werror']
+  env['CPPPATH'] += Dir['modules/data-structures/source/**/']
+  #env['CFLAGS'] += ['-Wall', '-Werror']
   env['LIBS'] = ['ncurses']
 end
 at_exit { Env.process }
@@ -24,9 +32,14 @@ at_exit { Env.process }
 task :default => [:build]
 
 desc "Build the AFM release binary"
-task :build do
-  Env.Program('build/afm', Dir['source/**/*.c'])
+task :build => ['modules/data-structures/source'] do
+  Env.Program('build/afm', Dir['source/**/*.c', 'modules/data-structures/source/**/*.c'])
 end
 
 desc "Remove all generate artifacts and directories"
 task(:clean) { Rscons.clean }
+
+desc "Remove all generated artifacts and directories as well as any git submodules"
+task :clobber => [:clean] do
+    sh 'git submodule deinit -f .'
+end
