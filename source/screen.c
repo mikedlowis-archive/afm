@@ -58,16 +58,19 @@ static void screen_place_windows(void) {
     wrefresh(p_frame->p_win);
 
     /* Print any other frames we might have */
+    int pos = 0;
     for(i = 0; i < vec_size(Screen_List); i++) {
-        int height = (lines / vec_size(Screen_List));
+        int remain = (lines % vec_size(Screen_List));
+        int height = (lines / vec_size(Screen_List)) + (i < remain ? 1 : 0);
         p_frame = (frame_t*)vec_at(Screen_List, i);
-        mvwin(p_frame->p_win, i*height, cols/2);
+        mvwin(p_frame->p_win, pos, cols/2);
         wresize(p_frame->p_win, height, cols/2);
         wclear(p_frame->p_win);
         wmove(p_frame->p_win, 1, 1);
         wprintw(p_frame->p_win, "(%d, %d)", i*height, cols/2);
         box(p_frame->p_win, 0 , 0);
         wrefresh(p_frame->p_win);
+        pos += height;
     }
 }
 
