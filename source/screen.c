@@ -14,12 +14,12 @@ static void screen_place_windows(void);
 static frame_t* screen_frame_new(void);
 static void screen_frame_free(void* p_frame);
 
-static int Master_Idx;
+static frame_t* Master;
 static vec_t* Screen_List;
 
 void screen_init(void) {
-    Screen_List = vec_new(1, screen_frame_new());
-    Master_Idx = 0;
+    Master = screen_frame_new();
+    Screen_List = vec_new(0);
 }
 
 void screen_update(void) {
@@ -41,34 +41,39 @@ void screen_open(void) {
 }
 
 void screen_close(void) {
-    vec_erase(Screen_List, 0, 1);
+    vec_erase(Screen_List, 0, 0);
 }
 
 static void screen_place_windows(void) {
     frame_t* p_frame;
     int i, lines, cols;
     getmaxyx(stdscr, lines, cols);
-    move(0,0);
+
+    /* Print the master frame */
+    p_frame = Master;
+    mvwin(p_frame->p_win, 0, 0);
+    wresize(p_frame->p_win, lines, (vec_size(Screen_List) > 0) ? cols/2 : cols);
+    wclear(p_frame->p_win);
+    box(p_frame->p_win, 0 , 0);
+    wrefresh(p_frame->p_win);
+
+    /* Print any other frames we might have */
     for(i = 0; i < vec_size(Screen_List); i++) {
+        int height = (lines / vec_size(Screen_List));
         p_frame = (frame_t*)vec_at(Screen_List, i);
-        printw("%d", vec_size(Screen_List));
-        if(i == Master_Idx) {
-            wmove(p_frame->p_win, 0, 0);
-            wresize(p_frame->p_win, lines, (vec_size(Screen_List) == 1) ? cols : cols/2);
-            box(p_frame->p_win, 0 , 0);
-            wrefresh(p_frame->p_win);
-        } else {
-            wmove(p_frame->p_win, 0, cols/2);
-            wresize(p_frame->p_win, lines, cols/2);
-            box(p_frame->p_win, 0 , 0);
-            wrefresh(p_frame->p_win);
-        }
+        mvwin(p_frame->p_win, i*height, cols/2);
+        wresize(p_frame->p_win, height, cols/2);
+        wclear(p_frame->p_win);
+        wmove(p_frame->p_win, 1, 1);
+        wprintw(p_frame->p_win, "(%d, %d)", i*height, cols/2);
+        box(p_frame->p_win, 0 , 0);
+        wrefresh(p_frame->p_win);
     }
 }
 
 static frame_t* screen_frame_new(void) {
     frame_t* p_frame = (frame_t*)mem_allocate(sizeof(frame_t),&screen_frame_free);
-    p_frame->p_win = newwin(LINES, COLS, 0, 0);
+    p_frame->p_win = newwin(1, 1, 0, 0);
     return p_frame;
 }
 
