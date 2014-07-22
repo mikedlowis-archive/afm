@@ -1,12 +1,15 @@
-#include "workdir.h"
-#include "state.h"
+#define _XOPEN_SOURCE 700
 #include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 #include <vec.h>
 #include <mem.h>
+
+#include "state.h"
+#include "workdir.h"
 
 typedef struct {
     int idx;
