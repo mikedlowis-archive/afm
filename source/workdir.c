@@ -5,9 +5,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <vec.h>
-#include <mem.h>
-
+#include "vec.h"
+#include "mem.h"
 #include "state.h"
 #include "workdir.h"
 
@@ -46,8 +45,8 @@ void workdir_next(void) {
     int index = state_get_focused_frame();
     //do nothing if at the end of the file list
     if(Windows[index].idx < vec_size(Windows[index].vfiles)-1){
-        Windows[index].idx += 1;
         int rows,cols;
+        Windows[index].idx += 1;
         getmaxyx(stdscr, rows,cols);
         (void) cols;
         if((TopBuffer+Windows[index].idx+BotBuffer) > rows)
@@ -99,9 +98,9 @@ void workdir_cd(void) {
 
 void workdir_ls(void) {
     int windex = state_get_focused_frame();
-    get_files(windex);
     int i = Windows[windex].top_index;
     int rows, cols;
+    get_files(windex);
     getmaxyx(stdscr, rows, cols);
     attron(A_UNDERLINE);
     mvaddnstr(1, 1, Windows[windex].cwd, cols-2);
@@ -123,16 +122,17 @@ void workdir_ls(void) {
 
 static void get_files(int windex){
     int i=0;
-    if(Windows[windex].vfiles) mem_release(Windows[windex].vfiles);
     char* dotdot = mem_allocate(sizeof(char)*3, NULL);
-    strcpy(dotdot, "..");
-    Windows[windex].vfiles = vec_new(1, dotdot); /* TODO: check if cwd = / */
     char cmd[1028] = "ls ";
-    strcpy(&cmd[3], Windows[windex].cwd);
-    FILE* ls = popen(cmd, "r");
     size_t len = 0; //unused. reflects sized allocated for buffer (filename) by getline
     ssize_t read;
     char* filename=0;
+    FILE* ls;
+    if(Windows[windex].vfiles) mem_release(Windows[windex].vfiles);
+    strcpy(dotdot, "..");
+    Windows[windex].vfiles = vec_new(1, dotdot); /* TODO: check if cwd = / */
+    strcpy(&cmd[3], Windows[windex].cwd);
+    ls = popen(cmd, "r");
     i = 1;
     while ((read = getline(&filename, &len, ls)) != -1){
         filename[read-1]=0; //remove ending newline
