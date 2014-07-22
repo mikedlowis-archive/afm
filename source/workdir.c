@@ -135,8 +135,8 @@ static void get_files(int windex){
     ls = popen(cmd, "r");
     i = 1;
     while ((read = getline(&filename, &len, ls)) != -1){
-        filename[read-1]=0; //remove ending newline
         char* lol = mem_allocate(read*sizeof(char), NULL);
+        filename[read-1]=0; //remove ending newline
         strcpy(lol, filename);
         vec_push_back(Windows[windex].vfiles, lol);
         i++;
