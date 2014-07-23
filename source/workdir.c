@@ -28,6 +28,7 @@ WorkDir_T* workdir_new(char* path){
 	WorkDir_T* wd = mem_allocate(sizeof(WorkDir_T), &workdir_free);
 	wd->idx = 0;
 	wd->path = path;
+	wd->vfiles = vec_new(0);
 	workdir_ls(wd);
 	wd->top_index = 0;
 	return wd;
@@ -104,26 +105,31 @@ void workdir_cd(WorkDir_T* wd) {
 }
 
 void workdir_ls(WorkDir_T* wd){
-    int i=0;
-    char* dotdot = mem_allocate(sizeof(char)*3, NULL);
-    char cmd[1028] = "ls "; //TODO: suck less
+    char* dotdot = mem_allocate(sizeof(char) * 3, NULL);
+    char* cmd = mem_allocate(sizeof(char) * (4+(strlen(wd->path))), NULL);
     size_t len = 0; //unused. reflects sized allocated for buffer (filename) by getline
     ssize_t read;
-    char* filename=0;
+    char* filename = 0;
     FILE* ls;
+    //free old file vector
     if(wd->vfiles) mem_release(wd->vfiles);
-    strcpy(dotdot, "..");
-    wd->vfiles = vec_new(1, dotdot); /* TODO: check if path = / */
-    strcpy(&cmd[3], wd->path);
+    //open new ls pipe
+    strcpy(cmd, "ls ");
+    strcat(cmd, wd->path);
     ls = popen(cmd, "r");
-    i = 1;
+    strcpy(dotdot, "..");
+    //initialize new file vector
+    wd->vfiles = vec_new(1, dotdot); /* TODO: check if path = / */
     while ((read = getline(&filename, &len, ls)) != -1){
         char* lol = mem_allocate(read*sizeof(char), NULL);
         filename[read-1]=0; //remove ending newline
         strcpy(lol, filename);
         vec_push_back(wd->vfiles, lol);
-        i++;
-        if(i>1022) break;
+        free(filename);
+		filename = 0;
     }
+    //mem_release(dotdot); #dont free, because there's a bug(?) in vectors and reference counting
+    //reference counter is not incremented for added items, so releasinghere will free the memory
+    mem_release(cmd);
 }
 
