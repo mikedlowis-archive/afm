@@ -1,6 +1,7 @@
 #include "input.h"
 #include "state.h"
 #include "workdir.h"
+#include "screen.h"
 
 void input_handle_key(char ch) {
     /* Assume screen is dirty by default */
@@ -15,6 +16,10 @@ void input_handle_key(char ch) {
         case 'k': workdir_prev();
                   break;
         case 'e': workdir_cd();
+                  break;
+        case 'n': screen_open();
+                  break;
+        case 'c': screen_close();
                   break;
         default:  is_screen_dirty = false;
                   break;
