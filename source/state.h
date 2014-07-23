@@ -8,6 +8,7 @@
 #define STATE_H
 
 #include <stdbool.h>
+#include "screen.h"
 
 bool state_get_running(void);
 void state_set_running(bool val);
@@ -17,7 +18,7 @@ bool state_get_screen_resized(void);
 void state_set_screen_resized(bool val);
 bool state_get_aardvark_mode(void);
 void state_set_aardvark_mode(bool val);
-int state_get_focused_frame(void);
-void state_set_focused_frame(int id);
+frame_t* state_get_focused_frame(void);
+void state_set_focused_frame(frame_t* p_frame);
 
 #endif /* STATE_H */

@@ -1,4 +1,5 @@
 #include "state.h"
+#include "screen.h"
 
 /** Whether the system is currently running or not. */
 static bool Running = true;
@@ -12,8 +13,8 @@ static bool Resized = true;
 /** Whether the aardvark should be displayed */
 static bool AardvarkOn = false;
 
-/** The currently focused frame id */
-static int Focused_Index = 0;
+/** A pointer to the currently focused frame */
+static frame_t* Focused_Frame = 0;
 
 bool state_get_running(void)
 {
@@ -55,13 +56,12 @@ void state_set_aardvark_mode(bool val)
     AardvarkOn = val;
 }
 
-int state_get_focused_frame(void)
-{
-    return Focused_Index;
+frame_t* state_get_focused_frame(void) {
+	return Focused_Frame;
 }
 
-void state_set_focused_frame(int id)
+void state_set_focused_frame(frame_t *p_frame)
 {
-    Focused_Index = id;
+    Focused_Frame = p_frame;
 }
 

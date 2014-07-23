@@ -7,11 +7,6 @@
 #include "vec.h"
 #include "mem.h"
 
-typedef struct {
-    WINDOW* p_win;
-    WorkDir_T* workdir;
-} frame_t;
-
 static void screen_place_windows(void);
 static frame_t* screen_frame_new(void);
 static void screen_frame_free(void* p_frame);
@@ -23,6 +18,7 @@ static vec_t* Screen_List;
 void screen_init(void) {
     Master = screen_frame_new();
     Screen_List = vec_new(0);
+    state_set_focused_frame(Master);
 }
 
 void screen_update(void) {
@@ -105,12 +101,12 @@ void screen_frame_draw_files(frame_t* frame){
 	wattroff(frame->p_win, A_UNDERLINE);
 	//list files
 	while (i < vec_size(frame->workdir->vfiles)){
-		if(i == frame->workdir->idx){
+		if(frame == state_get_focused_frame() && i == frame->workdir->idx){
 			wattron(frame->p_win, A_STANDOUT);
 			wattron(frame->p_win, A_BOLD);
 		}
         mvwaddnstr(frame->p_win, FrameTopBuffer+i-frame->workdir->top_index, 1, vec_at(frame->workdir->vfiles, i), cols-2);
-		if(i == frame->workdir->idx){
+		if(frame == state_get_focused_frame() && i == frame->workdir->idx){
 			wattroff(frame->p_win, A_STANDOUT);
 			wattroff(frame->p_win, A_BOLD);
 		}
