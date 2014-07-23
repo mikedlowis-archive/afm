@@ -57,7 +57,7 @@ static void screen_place_windows(void) {
     mvwin(p_frame->p_win, 0, 0);
     wresize(p_frame->p_win, lines, (vec_size(Screen_List) > 0) ? cols/2 : cols);
     wclear(p_frame->p_win);
-    //TODO: draw files: screen_frame_draw_files(p_frame);
+    screen_frame_draw_files(p_frame);
     box(p_frame->p_win, 0 , 0);
     wrefresh(p_frame->p_win);
 
@@ -70,7 +70,7 @@ static void screen_place_windows(void) {
         mvwin(p_frame->p_win, pos, cols/2);
         wresize(p_frame->p_win, height, cols/2);
         wclear(p_frame->p_win);
-		//TODO: draw files: screen_frame_draw_files(p_frame);
+		screen_frame_draw_files(p_frame);
         wmove(p_frame->p_win, 1, 1);
         wprintw(p_frame->p_win, "(%d, %d)", i*height, cols/2);
         box(p_frame->p_win, 0 , 0);
@@ -83,7 +83,7 @@ static frame_t* screen_frame_new(void) {
     frame_t* p_frame = (frame_t*)mem_allocate(sizeof(frame_t),&screen_frame_free);
     p_frame->p_win = newwin(1, 1, 0, 0);
     //TODO use current focused window's path
-    p_frame->workdir = 0; // TODO: create workdir: workdir_new(get_current_dir_name());
+    p_frame->workdir = workdir_new(get_current_dir_name());
     return p_frame;
 }
 
