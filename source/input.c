@@ -13,7 +13,7 @@ void input_handle_key(char ch) {
                   break;
         case 'j': workdir_next(state_get_focused_frame()->workdir); break;
         case 'k': workdir_prev(state_get_focused_frame()->workdir); break;
-        //case 'e': workdir_cd(state_get_focused_frame()->workdir); break;
+        case 'e': workdir_cd(state_get_focused_frame()->workdir); break;
         case 'n': screen_open();
                   break;
         case 'c': screen_close();

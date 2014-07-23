@@ -76,10 +76,9 @@ char* workdir_cd_up(WorkDir_T* wd){
 	} else {
 		newpath = mem_allocate(sizeof(char)*last_slash, NULL);
 		strncpy(newpath, wd->path, last_slash);
-		newpath[last_slash-1]=0;
+		newpath[last_slash] = 0;
 	}
-	mem_release(wd->path);
-	wd->path = newpath;
+	return newpath;
 }
 
 //go down a directory: append '/subdir' to path
@@ -94,14 +93,14 @@ char* workdir_cd_down(WorkDir_T* wd){
 }
 
 void workdir_cd(WorkDir_T* wd) {
-	char* newpath  = (wd->idx == 0) ? workdir_cd_up(wd) : workdir_cd_down(wd);
+	char* newpath = (wd->idx == 0) ? workdir_cd_up(wd) : workdir_cd_down(wd);
 	if(is_dir(newpath)){
-		mem_release(wd->path);
+		//TODO: this segfaults: mem_release(wd->path);
 		wd->path = newpath;
 		wd->idx = 0;
 		wd->top_index = 0;
 	}
-    //TODO: refresh file list
+	workdir_ls(wd);
 }
 
 void workdir_ls(WorkDir_T* wd){

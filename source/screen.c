@@ -1,11 +1,17 @@
+/* external libraries */
+#include <ncurses.h>
+#include <unistd.h>
+#include <stdio.h>
+
+/* internal libraries */
+#include "vec.h"
+#include "mem.h"
+
+/* internal headers */
 #include "screen.h"
 #include "state.h"
 #include "aardvark.h"
 #include "workdir.h"
-#include <ncurses.h>
-#include <unistd.h>
-#include "vec.h"
-#include "mem.h"
 
 static void screen_place_windows(void);
 static frame_t* screen_frame_new(void);
