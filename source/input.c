@@ -11,12 +11,9 @@ void input_handle_key(char ch) {
                   break;
         case 'q': state_set_running(false);
                   break;
-        case 'j': workdir_next();
-                  break;
-        case 'k': workdir_prev();
-                  break;
-        case 'e': workdir_cd();
-                  break;
+        //case 'j': workdir_next(); break;
+        //case 'k': workdir_prev(); break;
+        //case 'e': workdir_cd(); break;
         case 'n': screen_open();
                   break;
         case 'c': screen_close();
