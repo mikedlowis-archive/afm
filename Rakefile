@@ -23,6 +23,7 @@ Env = Rscons::Environment.new do |env|
   env['CPPPATH'] += Dir['modules/data-structures/source/**/']
   #env['CFLAGS'] += ['-Wall']
   env['CFLAGS'] += ['-Werror', '-pedantic', '--std=c99']
+  env['CFLAGS'] += ['-D_GNU_SOURCE', '-D_XOPEN_SOURCE=700']
   env['LIBS'] = ['ncurses']
 end
 at_exit { Env.process }

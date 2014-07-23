@@ -1,4 +1,3 @@
-#define _XOPEN_SOURCE 700
 #include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,10 +8,7 @@
 #include "mem.h"
 #include "state.h"
 #include "workdir.h"
-
-//number of lines to leave before/after dir contents
-static int TopBuffer = 2;
-static int BotBuffer = 2;
+#include "screen.h"
 
 static void get_files(int windex);
 
@@ -22,31 +18,24 @@ static bool is_dir(char* path) {
         return (s.st_mode & S_IFDIR);
     }/*else error*/
     return false;
+    //TODO: oneliner: return ((stat(path, &s) == 0) && (s.st_mode & S_IFDIR));
 }
 
 void workdir_free(void* p_wd);
 
 WorkDir_T* workdir_new(char* path){
-	WorkDir_T* wd = mem_allocate(sizeof(WorkDir_T), workdir_free);
+	WorkDir_T* wd = mem_allocate(sizeof(WorkDir_T), &workdir_free);
 	wd->idx = 0;
-	strcpy(wd->cwd, path);
-	wd->vfiles = vec_new(0);
+	wd->path = path;
+	workdir_ls(wd);
 	wd->top_index = 0;
 	return wd;
 }
 
 void workdir_free(void* p_wd){
-	//TODO: free shit.
+	WorkDir_T* wd = (WorkDir_T*)p_wd;
+	mem_release(wd->vfiles);
 }
-
-/*
-void workdir_init(int windex) {
-    Windows[windex].idx = 0;
-    getcwd(Windows[windex].cwd, 1024);
-    Windows[windex].vfiles = vec_new(0);
-}
-*/
-
 
 void workdir_next(WorkDir_T* wd) {
     //do nothing if at the end of the file list
@@ -56,8 +45,8 @@ void workdir_next(WorkDir_T* wd) {
         getmaxyx(stdscr, rows,cols);
         (void) cols;
         //scroll if necessary
-        if((TopBuffer+wd->idx+BotBuffer) > rows)
-            wd->top_index = wd->idx-(rows-TopBuffer-BotBuffer);
+        if((FrameTopBuffer+wd->idx+FrameBotBuffer) > rows)
+            wd->top_index = wd->idx-(rows-FrameTopBuffer-FrameBotBuffer);
     }
 }
 
@@ -71,66 +60,49 @@ void workdir_prev(WorkDir_T* wd) {
     }
 }
 
+//go up a directory: remove everything after (including) last '/' character
+char* workdir_cd_up(WorkDir_T* wd){
+	int last_slash = 0, i = 0;
+	char* newpath;
+	while(wd->path[i] != 0){
+		if(wd->path[i] == '/') last_slash = i;
+		i++;
+	}
+	if(last_slash == 0){
+		newpath = mem_allocate(sizeof(char)*2, NULL);
+		strcpy(newpath, "/");
+	} else {
+		newpath = mem_allocate(sizeof(char)*last_slash, NULL);
+		strncpy(newpath, wd->path, last_slash);
+		newpath[last_slash-1]=0;
+	}
+	mem_release(wd->path);
+	wd->path = newpath;
+}
+
+//go down a directory: append '/subdir' to path
+char* workdir_cd_down(WorkDir_T* wd){
+	char* subdir = vec_at(wd->vfiles, wd->idx);
+	int newpathlen = strlen(wd->path) + strlen(subdir) + 2; //+2, for slash & end null;
+	char *newpath = mem_allocate(sizeof(char)*newpathlen, NULL);
+	strcpy(newpath, wd->path);
+	strcat(newpath, "/");
+	strcat(newpath, subdir);
+	return newpath;
+}
+
 void workdir_cd(WorkDir_T* wd) {
-    int last_slash=0, i=0;
-    bool ends_with_slash = false;
-    while(wd->cwd[i] != 0){
-        if(wd->cwd[i] == '/')
-            last_slash = i;
-        i++;
-    }
-    ends_with_slash = (last_slash == (i-1)); /* should only be true for root */
-    if(wd->idx == 0) { /* up */
-        //truncate cwd including the last slash
-        wd->cwd[last_slash]=0;
-        if(last_slash==0){ //at root. fixitfixitfixit.
-			strcpy(wd->cwd, "/");
-            //wd->cwd[0]='/';
-            //wd->cwd[1]=0;
-        }
-    }else{
-        //add file to cwd:
-        int cwdend = i;
-        if(!ends_with_slash){
-            wd->cwd[i] = '/';
-            i++;
-        }
-        strcpy(&(wd->cwd[i]), vec_at(wd->vfiles, wd->idx));
-        wd->idx = 0;
-        wd->top_index = 0;
-        //if not a directory, revert
-        if(!is_dir(wd->cwd)) wd->cwd[cwdend]=0;
-    }
+	char* newpath  = (wd->idx == 0) ? workdir_cd_up(wd) : workdir_cd_down(wd);
+	if(is_dir(newpath)){
+		mem_release(wd->path);
+		wd->path = newpath;
+		wd->idx = 0;
+		wd->top_index = 0;
+	}
     //TODO: refresh file list
 }
 
-/*
-void workdir_ls(void) {
-    int windex = state_get_focused_frame();
-    int i = Windows[windex].top_index;
-    int rows, cols;
-    get_files(windex);
-    getmaxyx(stdscr, rows, cols);
-    attron(A_UNDERLINE);
-    mvaddnstr(1, 1, Windows[windex].cwd, cols-2);
-    attroff(A_UNDERLINE);
-    while (i < vec_size(Windows[windex].vfiles)){
-        if(i == Windows[windex].idx){
-            attron(A_STANDOUT);
-            attron(A_BOLD);
-        }
-        mvaddnstr(TopBuffer+i-Windows[windex].top_index, 1, vec_at(Windows[windex].vfiles, i), cols-2);
-        if(i == Windows[windex].idx){
-            attroff(A_STANDOUT);
-            attroff(A_BOLD);
-        }
-        i++;
-        if((TopBuffer+i-Windows[windex].top_index+BotBuffer) > rows) break;
-    }
-}
-*/
-
-void workdir_refresh_file_list(WorkDir_T* wd){
+void workdir_ls(WorkDir_T* wd){
     int i=0;
     char* dotdot = mem_allocate(sizeof(char)*3, NULL);
     char cmd[1028] = "ls "; //TODO: suck less
@@ -140,8 +112,8 @@ void workdir_refresh_file_list(WorkDir_T* wd){
     FILE* ls;
     if(wd->vfiles) mem_release(wd->vfiles);
     strcpy(dotdot, "..");
-    wd->vfiles = vec_new(1, dotdot); /* TODO: check if cwd = / */
-    strcpy(&cmd[3], wd->cwd);
+    wd->vfiles = vec_new(1, dotdot); /* TODO: check if path = / */
+    strcpy(&cmd[3], wd->path);
     ls = popen(cmd, "r");
     i = 1;
     while ((read = getline(&filename, &len, ls)) != -1){
