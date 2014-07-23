@@ -7,14 +7,23 @@
 #ifndef WORKDIR_H
 #define WORKDIR_H
 
-void workdir_init(int windex);
+#include "vec.h"
 
-void workdir_prev(void);
+typedef struct {
+    int idx;
+    char* path;
+    vec_t* vfiles;
+    int top_index;
+} WorkDir_T;
 
-void workdir_next(void);
+WorkDir_T* workdir_new(char* path);
 
-void workdir_cd(void);
+void workdir_prev(WorkDir_T*);
 
-void workdir_ls(void);
+void workdir_next(WorkDir_T*);
+
+void workdir_cd(WorkDir_T*);
+
+void workdir_ls(WorkDir_T*);
 
 #endif /* WORKDIR_H */
