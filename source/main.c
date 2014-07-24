@@ -19,7 +19,6 @@ void handle_signal(int sig) {
 }
 
 int main(int argc, char** argv) {
-    workdir_init(0);
     /* Handle terminal resizing */
     signal(SIGWINCH, handle_signal);
     /* Initialize ncurses and user input settings */
@@ -38,7 +37,6 @@ int main(int argc, char** argv) {
     refresh();
     endwin();
     screen_deinit();
-    workdir_deinit();
     return 0;
 }
 

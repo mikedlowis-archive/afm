@@ -1,8 +1,9 @@
 #include "aardvark.h"
+#include <stdint.h>
 #include <ncurses.h>
 
 typedef struct {
-    char a, b, c;
+    uint8_t a, b, c;
 } Triplet_T;
 
 static Triplet_T aadata[77] = {
@@ -25,10 +26,10 @@ static Triplet_T aadata[77] = {
 
 void aardvark_draw(void) {
     int row, col;
-    getmaxyx(stdscr, row, col);
     int i;
     int trips=sizeof(aadata)/sizeof(Triplet_T);
     char* aardvark="############################################################";
+    getmaxyx(stdscr, row, col);
     for(i=0; i<trips; i++)
         mvaddnstr(((row-28)/2)+aadata[i].a, (col-70)/2+aadata[i].b, aardvark, aadata[i].c);
     refresh();

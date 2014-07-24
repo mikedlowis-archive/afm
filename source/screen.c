@@ -1,24 +1,34 @@
+/* external libraries */
+#include <ncurses.h>
+#include <unistd.h>
+#include <stdio.h>
+
+/* internal libraries */
+#include "vec.h"
+#include "list.h"
+#include "mem.h"
+
+/* internal headers */
 #include "screen.h"
 #include "state.h"
 #include "aardvark.h"
 #include "workdir.h"
-#include <ncurses.h>
-#include "list.h"
-#include "mem.h"
-
-typedef struct {
-    WINDOW* p_win;
-} frame_t;
 
 static void screen_place_windows(void);
 static frame_t* screen_frame_new(void);
 static void screen_frame_free(void* p_frame);
+void screen_frame_draw_files(frame_t* frame);
 
 static list_t* Screen_List;
+
+frame_t* master_frame(void){
+	return (frame_t*) Screen_List->head->contents;
+}
 
 void screen_init(void) {
     Screen_List = list_new();
     list_push_back(Screen_List, screen_frame_new());
+    state_set_focused_frame(master_frame());
 }
 
 void screen_deinit(void) {
@@ -61,6 +71,7 @@ static void screen_place_windows(void) {
     mvwin(p_frame->p_win, 0, 0);
     wresize(p_frame->p_win, lines, (num_frames > 1) ? cols/2 : cols);
     wclear(p_frame->p_win);
+    screen_frame_draw_files(p_frame);
     box(p_frame->p_win, 0 , 0);
     wrefresh(p_frame->p_win);
 
@@ -77,6 +88,7 @@ static void screen_place_windows(void) {
         mvwin(p_frame->p_win, pos, cols/2);
         wresize(p_frame->p_win, height, cols/2);
         wclear(p_frame->p_win);
+		screen_frame_draw_files(p_frame);
         wmove(p_frame->p_win, 1, 1);
         box(p_frame->p_win, 0 , 0);
         wrefresh(p_frame->p_win);
@@ -90,6 +102,8 @@ static void screen_place_windows(void) {
 static frame_t* screen_frame_new(void) {
     frame_t* p_frame = (frame_t*)mem_allocate(sizeof(frame_t),&screen_frame_free);
     p_frame->p_win = newwin(1, 1, 0, 0);
+    char* path = state_get_focused_frame() ? state_get_focused_frame()->workdir->path : get_current_dir_name();
+    p_frame->workdir = workdir_new(path);
     return p_frame;
 }
 
@@ -98,4 +112,31 @@ static void screen_frame_free(void* p_frame_ptr) {
     wborder(p_frame->p_win, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
     wrefresh(p_frame->p_win);
     delwin(p_frame->p_win);
+    if(p_frame->workdir) mem_release(p_frame->workdir);
 }
+
+void screen_frame_draw_files(frame_t* frame){
+	int i = frame->workdir->top_index;
+	int rows, cols;
+	getmaxyx(frame->p_win, rows, cols);
+	//draw path
+	wattron(frame->p_win, A_UNDERLINE);
+	mvwaddnstr(frame->p_win, 1, 1, frame->workdir->path, cols-2);
+	wattroff(frame->p_win, A_UNDERLINE);
+	//list files
+	while (i < vec_size(frame->workdir->vfiles)){
+		if(frame == state_get_focused_frame() && i == frame->workdir->idx){
+			wattron(frame->p_win, A_STANDOUT);
+			wattron(frame->p_win, A_BOLD);
+		}
+        mvwaddnstr(frame->p_win, FrameTopBuffer+i-frame->workdir->top_index, 1, vec_at(frame->workdir->vfiles, i), cols-2);
+		if(frame == state_get_focused_frame() && i == frame->workdir->idx){
+			wattroff(frame->p_win, A_STANDOUT);
+			wattroff(frame->p_win, A_BOLD);
+		}
+		i++;
+        if((FrameTopBuffer+i-frame->workdir->top_index+FrameBotBuffer) > rows) break;
+	}
+}
+
+
