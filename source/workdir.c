@@ -15,11 +15,7 @@ static void get_files(int windex);
 
 static bool is_dir(char* path) {
     struct stat s;
-    if( stat(path, &s) == 0){
-        return (s.st_mode & S_IFDIR);
-    }/*else error*/
-    return false;
-    //TODO: oneliner: return ((stat(path, &s) == 0) && (s.st_mode & S_IFDIR));
+    return ((stat(path, &s) == 0) && (s.st_mode & S_IFDIR));
 }
 
 void workdir_free(void* p_wd);
