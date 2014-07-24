@@ -9,6 +9,8 @@
 
 void workdir_init(int windex);
 
+void workdir_deinit(void);
+
 void workdir_prev(void);
 
 void workdir_next(void);

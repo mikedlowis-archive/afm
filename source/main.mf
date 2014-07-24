@@ -1,0 +1,3 @@
+source/main.o: source/main.c source/aardvark.h source/state.h \
+  source/screen.h source/workdir.h \
+  modules/data-structures/source/vector/vec.h source/input.h

@@ -37,6 +37,8 @@ int main(int argc, char** argv) {
     erase();
     refresh();
     endwin();
+    screen_deinit();
+    workdir_deinit();
     return 0;
 }
 

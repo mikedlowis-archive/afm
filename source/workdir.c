@@ -37,6 +37,10 @@ void workdir_init(int windex) {
     getcwd(Windows[windex].cwd, 1024);
 }
 
+void workdir_deinit(void) {
+    free(Windows[0].files);
+}
+
 void workdir_next(void) {
     int index = state_get_focused_frame();
     //do nothing if at the end of the file list
