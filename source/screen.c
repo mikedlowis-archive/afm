@@ -84,8 +84,8 @@ static void screen_place_windows(void) {
 static frame_t* screen_frame_new(void) {
     frame_t* p_frame = (frame_t*)mem_allocate(sizeof(frame_t),&screen_frame_free);
     p_frame->p_win = newwin(1, 1, 0, 0);
-    //TODO use current focused window's path
-    p_frame->workdir = workdir_new(get_current_dir_name());
+    char* path = state_get_focused_frame() ? state_get_focused_frame()->workdir->path : get_current_dir_name();
+    p_frame->workdir = workdir_new(path);
     return p_frame;
 }
 
