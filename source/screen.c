@@ -55,8 +55,10 @@ void screen_open(void) {
 
 void screen_close(void) {
     int num_frames = list_size(Screen_List);
-    if(num_frames > 1)
+    if(num_frames > 1){
         list_delete(Screen_List, 0);
+		state_set_focused_frame(master_frame());
+    }
 }
 
 static void screen_place_windows(void) {
