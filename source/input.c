@@ -56,6 +56,7 @@ void input_handle_key(char ch) {
     /* If no more room then reset the buffer */
     if (len+1 >= 16) {
         beep();
+        flash();
         len = 0;
         Key_Buffer[0] = '\0';
     }
@@ -92,6 +93,7 @@ void input_handle_key(char ch) {
          * finding a longer match, then throw out the buffer and start over */
         if(!match_found && !more_matches) {
             beep();
+            flash();
             len = 0;
             Key_Buffer[0] = '\0';
         }
