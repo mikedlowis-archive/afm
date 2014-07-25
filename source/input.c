@@ -14,6 +14,7 @@ typedef struct {
 
 static void handle_aardvark(void) {
     state_set_aardvark_mode(!state_get_aardvark_mode());
+    state_set_screen_dirty(true);
 }
 
 static void handle_quit(void) {
@@ -21,15 +22,15 @@ static void handle_quit(void) {
 }
 
 static void handle_next(void) {
-    workdir_next(state_get_focused_frame()->workdir);
+    //workdir_next(state_get_focused_frame()->workdir);
 }
 
 static void handle_prev(void) {
-    workdir_prev(state_get_focused_frame()->workdir);
+    //workdir_prev(state_get_focused_frame()->workdir);
 }
 
 static void handle_cd(void) {
-    workdir_cd(state_get_focused_frame()->workdir);
+    //workdir_cd(state_get_focused_frame()->workdir);
 }
 
 static binding_t Default_Bindings[] = {
@@ -78,7 +79,7 @@ void input_handle_key(char ch) {
                 more_matches = true;
             }
             /* If the current string matches exactly then execute it's handler */
-            else if (0 == strcmp(Key_Buffer, seq))
+            if (0 == strcmp(Key_Buffer, seq))
             {
                 binding.callback();
                 Key_Buffer[0] = '\0';
