@@ -3,9 +3,7 @@
 #include "workdir.h"
 #include "screen.h"
 #include <stdlib.h>
-
-static vec_t* States;
-static vec_t* Curr_State;
+#include <string.h>
 
 typedef void (*key_cb_t)(void);
 
@@ -34,51 +32,68 @@ static void handle_cd(void) {
     workdir_cd(state_get_focused_frame()->workdir);
 }
 
-binding_t Default_Bindings[] = {
+static binding_t Default_Bindings[] = {
     { "a",  &handle_aardvark },
     { "q",  &handle_quit },
     { "j",  &handle_next },
     { "k",  &handle_prev },
     { "\n", &handle_cd },
     { "wn", &screen_open },
-    { "wc", &screen_open },
+    { "wc", &screen_close },
+    //{ "wj", NULL },
+    //{ "wk", NULL },
 };
 
-void input_init(void) {
-    size_t num_entries = (sizeof(Default_Bindings) / sizeof(binding_t));
-    for(int i = 0; i < num_entries; i++) {
-        input_add_binding(Default_Bindings[i].sequence, Default_Bindings[i].callback);
-    }
-    exit(0);
-}
+static char Key_Buffer[16] = {0};
 
 void input_handle_key(char ch) {
-    ///* Assume screen is dirty by default */
-    //bool is_screen_dirty = true;
-    //switch(ch){
-    //    case 'a': state_set_aardvark_mode(!state_get_aardvark_mode());
-    //              break;
-    //    case 'q': state_set_running(false);
-    //              break;
-    //    case 'j': workdir_next(state_get_focused_frame()->workdir); break;
-    //    case 'k': workdir_prev(state_get_focused_frame()->workdir); break;
-    //    case 'e': workdir_cd(state_get_focused_frame()->workdir); break;
-    //    case 'n': screen_open();
-    //              break;
-    //    case 'c': screen_close();
-    //              break;
-    //    default:  is_screen_dirty = false;
-    //              break;
-    //}
-    ///* Update the screen if we need to */
-    //state_set_screen_dirty(state_get_screen_dirty() || is_screen_dirty);
-}
+    bool more_matches = false;
+    bool match_found  = false;
+    size_t num_entries = (sizeof(Default_Bindings) / sizeof(binding_t));
+    int len = strlen(Key_Buffer);
 
-void input_add_binding(char* seq, key_cb_t p_cb_fn) {
-    vec_t* p_state = States;
-    size_t len = strlen(seq);
-    for(int i = 0; i < len; i++) {
-        key_t* p_key = input_lookup_or_add(p_state, seq[i]);
+    /* If no more room then reset the buffer */
+    if (len+1 >= 16) {
+        beep();
+        len = 0;
+        Key_Buffer[0] = '\0';
+    }
+
+    /* If we got a valid key then process it */
+    if(ERR != ch) {
+        /* Put the key in the buffer */
+        len++;
+        Key_Buffer[len-1] = ch;
+        Key_Buffer[len]   = '\0';
+
+        /* Loop over the bindings */
+        for(int i = 0; i < num_entries; i++) {
+            binding_t binding = Default_Bindings[i];
+            char* seq = binding.sequence;
+
+            /* If the binding we're looking at matches a substring but has more chars
+             * make note of it so we can wait for the next char */
+            if((strlen(seq) > len) && (0 == strncmp(seq, Key_Buffer, len)))
+            {
+                more_matches = true;
+            }
+            /* If the current string matches exactly then execute it's handler */
+            else if (0 == strcmp(Key_Buffer, seq))
+            {
+                binding.callback();
+                Key_Buffer[0] = '\0';
+                match_found = true;
+                break;
+            }
+        }
+
+        /* If we did not find a match and we don't have any possibility of
+         * finding a longer match, then throw out the buffer and start over */
+        if(!match_found && !more_matches) {
+            beep();
+            len = 0;
+            Key_Buffer[0] = '\0';
+        }
     }
 }
 

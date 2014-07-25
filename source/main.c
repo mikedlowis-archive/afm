@@ -28,16 +28,15 @@ int main(int argc, char** argv) {
     noecho();
     timeout(25);
     refresh();
-    //screen_init();
-    input_init();
+    screen_init();
     while(state_get_running()) {
-        //if(state_get_screen_dirty()) screen_update();
+        if(state_get_screen_dirty()) screen_update();
         input_handle_key(getch());
     }
     erase();
     refresh();
     endwin();
-    //screen_deinit();
+    screen_deinit();
     return 0;
 }
 
