@@ -22,15 +22,15 @@ static void handle_quit(void) {
 }
 
 static void handle_next(void) {
-    //workdir_next(state_get_focused_frame()->workdir);
+    workdir_next(state_get_focused_frame()->workdir);
 }
 
 static void handle_prev(void) {
-    //workdir_prev(state_get_focused_frame()->workdir);
+    workdir_prev(state_get_focused_frame()->workdir);
 }
 
 static void handle_cd(void) {
-    //workdir_cd(state_get_focused_frame()->workdir);
+    workdir_cd(state_get_focused_frame()->workdir);
 }
 
 static binding_t Default_Bindings[] = {

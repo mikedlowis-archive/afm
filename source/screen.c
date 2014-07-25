@@ -20,7 +20,6 @@ static void screen_frame_free(void* p_frame);
 void screen_frame_draw_files(frame_t* frame);
 
 static list_t* Screen_List;
-static frame_t* Focused_Frame;
 
 static frame_t* master_frame(void){
     return (frame_t*) Screen_List->head->contents;
@@ -29,7 +28,7 @@ static frame_t* master_frame(void){
 void screen_init(void) {
     Screen_List = list_new();
     list_push_back(Screen_List, screen_frame_new());
-    //Focused_Frame = master_frame();
+    state_set_focused_frame(master_frame());
 }
 
 void screen_deinit(void) {
@@ -59,7 +58,7 @@ void screen_close(void) {
     int num_frames = list_size(Screen_List);
     if(num_frames > 1){
         list_delete(Screen_List, 0);
-        //Focused_Frame = master_frame();
+        state_set_focused_frame(master_frame());
     }
     state_set_screen_dirty(true);
 }
@@ -76,7 +75,7 @@ static void screen_place_windows(void) {
     mvwin(p_frame->p_win, 0, 0);
     wresize(p_frame->p_win, lines, (num_frames > 1) ? cols/2 : cols);
     wclear(p_frame->p_win);
-    //screen_frame_draw_files(p_frame);
+    screen_frame_draw_files(p_frame);
     box(p_frame->p_win, 0 , 0);
     wrefresh(p_frame->p_win);
 
@@ -93,7 +92,7 @@ static void screen_place_windows(void) {
         mvwin(p_frame->p_win, pos, cols/2);
         wresize(p_frame->p_win, height, cols/2);
         wclear(p_frame->p_win);
-        //screen_frame_draw_files(p_frame);
+        screen_frame_draw_files(p_frame);
         wmove(p_frame->p_win, 1, 1);
         box(p_frame->p_win, 0 , 0);
         wrefresh(p_frame->p_win);
@@ -107,8 +106,8 @@ static void screen_place_windows(void) {
 static frame_t* screen_frame_new(void) {
     frame_t* p_frame = (frame_t*)mem_allocate(sizeof(frame_t),&screen_frame_free);
     p_frame->p_win = newwin(1, 1, 0, 0);
-    //char* path = Focused_Frame->workdir->path;
-    //p_frame->workdir = workdir_new(".");
+    char* path = state_get_focused_frame() ? state_get_focused_frame()->workdir->path : get_current_dir_name();
+    p_frame->workdir = workdir_new(path);
     return p_frame;
 }
 
@@ -118,7 +117,7 @@ static void screen_frame_free(void* p_frame_ptr) {
     wborder(p_frame->p_win, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
     wrefresh(p_frame->p_win);
     delwin(p_frame->p_win);
-    //if(p_frame->workdir) mem_release(p_frame->workdir);
+    if(p_frame->workdir) mem_release(p_frame->workdir);
 }
 
 void screen_frame_draw_files(frame_t* frame){
@@ -131,15 +130,15 @@ void screen_frame_draw_files(frame_t* frame){
     wattroff(frame->p_win, A_UNDERLINE);
     //list files
     while (i < vec_size(frame->workdir->vfiles)){
-        //if(frame == Focused_Frame && i == frame->workdir->idx){
-        //    wattron(frame->p_win, A_STANDOUT);
-        //    wattron(frame->p_win, A_BOLD);
-        //}
+        if(frame == state_get_focused_frame() && i == frame->workdir->idx){
+            wattron(frame->p_win, A_STANDOUT);
+            wattron(frame->p_win, A_BOLD);
+        }
         mvwaddnstr(frame->p_win, FrameTopBuffer+i-frame->workdir->top_index, 1, vec_at(frame->workdir->vfiles, i), cols-2);
-        //if(frame == Focused_Frame && i == frame->workdir->idx){
-        //    wattroff(frame->p_win, A_STANDOUT);
-        //    wattroff(frame->p_win, A_BOLD);
-        //}
+        if(frame == state_get_focused_frame() && i == frame->workdir->idx){
+            wattroff(frame->p_win, A_STANDOUT);
+            wattroff(frame->p_win, A_BOLD);
+        }
         i++;
         if((FrameTopBuffer+i-frame->workdir->top_index+FrameBotBuffer) > rows) break;
     }

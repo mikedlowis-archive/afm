@@ -21,18 +21,18 @@ static bool is_dir(char* path) {
 void workdir_free(void* p_wd);
 
 WorkDir_T* workdir_new(char* path){
-	WorkDir_T* wd = mem_allocate(sizeof(WorkDir_T), &workdir_free);
-	wd->idx = 0;
-	wd->path = path;
-	wd->vfiles = vec_new(0);
-	workdir_ls(wd);
-	wd->top_index = 0;
-	return wd;
+    WorkDir_T* wd = mem_allocate(sizeof(WorkDir_T), &workdir_free);
+    wd->idx = 0;
+    wd->path = path;
+    wd->vfiles = vec_new(0);
+    workdir_ls(wd);
+    wd->top_index = 0;
+    return wd;
 }
 
 void workdir_free(void* p_wd){
-	WorkDir_T* wd = (WorkDir_T*)p_wd;
-	mem_release(wd->vfiles);
+    WorkDir_T* wd = (WorkDir_T*)p_wd;
+    mem_release(wd->vfiles);
 }
 
 void workdir_next(WorkDir_T* wd) {
@@ -46,6 +46,7 @@ void workdir_next(WorkDir_T* wd) {
         if((FrameTopBuffer+wd->idx+FrameBotBuffer) > rows)
             wd->top_index = wd->idx-(rows-FrameTopBuffer-FrameBotBuffer);
     }
+    state_set_screen_dirty(true);
 }
 
 void workdir_prev(WorkDir_T* wd) {
@@ -56,47 +57,49 @@ void workdir_prev(WorkDir_T* wd) {
         if(wd->idx < wd->top_index)
             wd->top_index = wd->idx;
     }
+    state_set_screen_dirty(true);
 }
 
 //go up a directory: remove everything after (including) last '/' character
 char* workdir_cd_up(WorkDir_T* wd){
-	int last_slash = 0, i = 0;
-	char* newpath;
-	while(wd->path[i] != 0){
-		if(wd->path[i] == '/') last_slash = i;
-		i++;
-	}
-	if(last_slash == 0){
-		newpath = mem_allocate(sizeof(char)*2, NULL);
-		strcpy(newpath, "/");
-	} else {
-		newpath = mem_allocate(sizeof(char)*last_slash, NULL);
-		strncpy(newpath, wd->path, last_slash);
-		newpath[last_slash] = 0;
-	}
-	return newpath;
+    int last_slash = 0, i = 0;
+    char* newpath;
+    while(wd->path[i] != 0){
+        if(wd->path[i] == '/') last_slash = i;
+        i++;
+    }
+    if(last_slash == 0){
+        newpath = mem_allocate(sizeof(char)*2, NULL);
+        strcpy(newpath, "/");
+    } else {
+        newpath = mem_allocate(sizeof(char)*last_slash, NULL);
+        strncpy(newpath, wd->path, last_slash);
+        newpath[last_slash] = 0;
+    }
+    return newpath;
 }
 
 //go down a directory: append '/subdir' to path
 char* workdir_cd_down(WorkDir_T* wd){
-	char* subdir = vec_at(wd->vfiles, wd->idx);
-	int newpathlen = strlen(wd->path) + strlen(subdir) + 2; //+2, for slash & end null;
-	char *newpath = mem_allocate(sizeof(char)*newpathlen, NULL);
-	strcpy(newpath, wd->path);
-	strcat(newpath, "/");
-	strcat(newpath, subdir);
-	return newpath;
+    char* subdir = vec_at(wd->vfiles, wd->idx);
+    int newpathlen = strlen(wd->path) + strlen(subdir) + 2; //+2, for slash & end null;
+    char *newpath = mem_allocate(sizeof(char)*newpathlen, NULL);
+    strcpy(newpath, wd->path);
+    strcat(newpath, "/");
+    strcat(newpath, subdir);
+    return newpath;
 }
 
 void workdir_cd(WorkDir_T* wd) {
-	char* newpath = (wd->idx == 0) ? workdir_cd_up(wd) : workdir_cd_down(wd);
-	if(is_dir(newpath)){
-		//TODO: this segfaults: mem_release(wd->path);
-		wd->path = newpath;
-		wd->idx = 0;
-		wd->top_index = 0;
-	}
-	workdir_ls(wd);
+    char* newpath = (wd->idx == 0) ? workdir_cd_up(wd) : workdir_cd_down(wd);
+    if(is_dir(newpath)){
+        //TODO: this segfaults: mem_release(wd->path);
+        wd->path = newpath;
+        wd->idx = 0;
+        wd->top_index = 0;
+    }
+    workdir_ls(wd);
+    state_set_screen_dirty(true);
 }
 
 void workdir_ls(WorkDir_T* wd){
@@ -121,7 +124,7 @@ void workdir_ls(WorkDir_T* wd){
         strcpy(lol, filename);
         vec_push_back(wd->vfiles, lol);
         free(filename);
-		filename = 0;
+        filename = 0;
     }
     //mem_release(dotdot); #dont free, because there's a bug(?) in vectors and reference counting
     //reference counter is not incremented for added items, so releasinghere will free the memory
