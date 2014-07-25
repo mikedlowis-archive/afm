@@ -20,15 +20,16 @@ static void screen_frame_free(void* p_frame);
 void screen_frame_draw_files(frame_t* frame);
 
 static list_t* Screen_List;
+static frame_t* Focused_Frame;
 
-frame_t* master_frame(void){
-	return (frame_t*) Screen_List->head->contents;
+static frame_t* master_frame(void){
+    return (frame_t*) Screen_List->head->contents;
 }
 
 void screen_init(void) {
     Screen_List = list_new();
     list_push_back(Screen_List, screen_frame_new());
-    state_set_focused_frame(master_frame());
+    Focused_Frame = master_frame();
 }
 
 void screen_deinit(void) {
@@ -57,7 +58,7 @@ void screen_close(void) {
     int num_frames = list_size(Screen_List);
     if(num_frames > 1){
         list_delete(Screen_List, 0);
-		state_set_focused_frame(master_frame());
+        Focused_Frame = master_frame();
     }
 }
 
@@ -90,7 +91,7 @@ static void screen_place_windows(void) {
         mvwin(p_frame->p_win, pos, cols/2);
         wresize(p_frame->p_win, height, cols/2);
         wclear(p_frame->p_win);
-		screen_frame_draw_files(p_frame);
+        screen_frame_draw_files(p_frame);
         wmove(p_frame->p_win, 1, 1);
         box(p_frame->p_win, 0 , 0);
         wrefresh(p_frame->p_win);
@@ -104,7 +105,7 @@ static void screen_place_windows(void) {
 static frame_t* screen_frame_new(void) {
     frame_t* p_frame = (frame_t*)mem_allocate(sizeof(frame_t),&screen_frame_free);
     p_frame->p_win = newwin(1, 1, 0, 0);
-    char* path = state_get_focused_frame() ? state_get_focused_frame()->workdir->path : get_current_dir_name();
+    char* path = Focused_Frame->workdir->path;
     p_frame->workdir = workdir_new(path);
     return p_frame;
 }
@@ -118,27 +119,27 @@ static void screen_frame_free(void* p_frame_ptr) {
 }
 
 void screen_frame_draw_files(frame_t* frame){
-	int i = frame->workdir->top_index;
-	int rows, cols;
-	getmaxyx(frame->p_win, rows, cols);
-	//draw path
-	wattron(frame->p_win, A_UNDERLINE);
-	mvwaddnstr(frame->p_win, 1, 1, frame->workdir->path, cols-2);
-	wattroff(frame->p_win, A_UNDERLINE);
-	//list files
-	while (i < vec_size(frame->workdir->vfiles)){
-		if(frame == state_get_focused_frame() && i == frame->workdir->idx){
-			wattron(frame->p_win, A_STANDOUT);
-			wattron(frame->p_win, A_BOLD);
-		}
+    int i = frame->workdir->top_index;
+    int rows, cols;
+    getmaxyx(frame->p_win, rows, cols);
+    //draw path
+    wattron(frame->p_win, A_UNDERLINE);
+    mvwaddnstr(frame->p_win, 1, 1, frame->workdir->path, cols-2);
+    wattroff(frame->p_win, A_UNDERLINE);
+    //list files
+    while (i < vec_size(frame->workdir->vfiles)){
+        if(frame == Focused_Frame && i == frame->workdir->idx){
+            wattron(frame->p_win, A_STANDOUT);
+            wattron(frame->p_win, A_BOLD);
+        }
         mvwaddnstr(frame->p_win, FrameTopBuffer+i-frame->workdir->top_index, 1, vec_at(frame->workdir->vfiles, i), cols-2);
-		if(frame == state_get_focused_frame() && i == frame->workdir->idx){
-			wattroff(frame->p_win, A_STANDOUT);
-			wattroff(frame->p_win, A_BOLD);
-		}
-		i++;
+        if(frame == Focused_Frame && i == frame->workdir->idx){
+            wattroff(frame->p_win, A_STANDOUT);
+            wattroff(frame->p_win, A_BOLD);
+        }
+        i++;
         if((FrameTopBuffer+i-frame->workdir->top_index+FrameBotBuffer) > rows) break;
-	}
+    }
 }
 
 
