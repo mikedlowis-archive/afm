@@ -104,6 +104,8 @@ void workdir_cd(WorkDir_T* wd) {
         wd->path = newpath;
         wd->idx = 0;
         wd->top_index = 0;
+    }else{
+        mem_release(newpath);
     }
     workdir_ls(wd);
     state_set_screen_dirty(true);
@@ -125,10 +127,10 @@ void workdir_ls(WorkDir_T* wd){
     strcpy(dotdot, "..");
     //initialize new file vector
     wd->vfiles = vec_new(0);
-	if (strcmp(wd->path, "/") != 0)
-		vec_push_back(wd->vfiles, dotdot);
-	else
-		mem_release(dotdot);
+    if (strcmp(wd->path, "/") != 0)
+        vec_push_back(wd->vfiles, dotdot);
+    else
+        mem_release(dotdot);
     while ((read = getline(&filename, &len, ls)) != -1){
         char* lol = mem_allocate(read*sizeof(char), NULL);
         filename[read-1]=0; //remove ending newline
