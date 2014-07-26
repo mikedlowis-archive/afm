@@ -28,6 +28,7 @@ WorkDir_T* workdir_new(char* path){
     WorkDir_T* wd = mem_allocate(sizeof(WorkDir_T), &workdir_free);
     wd->idx = 0;
     wd->path = path;
+    mem_retain(wd->path);
     wd->vfiles = vec_new(0);
     workdir_ls(wd);
     wd->top_index = 0;
