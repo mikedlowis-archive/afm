@@ -134,13 +134,23 @@ static void screen_frame_free(void* p_frame_ptr) {
     if(p_frame->workdir) mem_release(p_frame->workdir);
 }
 
+static int count_double_lines(frame_t* p_frame){
+    int count = 0;
+    for(int i = p_frame->top_index; i <= p_frame->workdir->idx; i++)
+        if (((File_T*)vec_at(p_frame->workdir->vfiles, i))->expanded) count++;
+    return count;
+}
+
 static void screen_frame_scroll(frame_t* p_frame){
     int rows,cols;
     getmaxyx(p_frame->p_win, rows, cols);
-    if(p_frame->workdir->idx < p_frame->top_index)
+    if(p_frame->workdir->idx < p_frame->top_index){
         p_frame->top_index = p_frame->workdir->idx;
-    else if (p_frame->top_index < p_frame->workdir->idx-(rows-FrameTopBuffer-FrameBotBuffer))
-        p_frame->top_index = p_frame->workdir->idx-(rows-FrameTopBuffer-FrameBotBuffer);
+    }else{
+        int doublelines = count_double_lines(p_frame);
+        if (p_frame->top_index < doublelines+p_frame->workdir->idx-(rows-FrameTopBuffer-FrameBotBuffer))
+            p_frame->top_index = doublelines+p_frame->workdir->idx-(rows-FrameTopBuffer-FrameBotBuffer);
+    }
 }
 
 void screen_frame_draw_files(frame_t* frame){
