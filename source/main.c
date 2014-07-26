@@ -22,6 +22,8 @@ int main(int argc, char** argv) {
     signal(SIGWINCH, handle_signal);
     /* Initialize ncurses and user input settings */
     initscr();
+    start_color();
+    init_pair(DIRECTORY, COLOR_BLUE, COLOR_BLACK);
     raw();
     keypad(stdscr, TRUE);
     noecho();

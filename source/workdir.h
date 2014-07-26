@@ -10,8 +10,6 @@
 #include <stdbool.h>
 #include "vec.h"
 
-static bool is_dir(char* path);
-
 void workdir_deinit(void);
 
 typedef struct {
@@ -30,5 +28,7 @@ void workdir_next(WorkDir_T*);
 void workdir_cd(WorkDir_T*);
 
 void workdir_ls(WorkDir_T*);
+
+bool is_dir(char* path);
 
 #endif /* WORKDIR_H */

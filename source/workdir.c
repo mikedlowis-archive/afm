@@ -17,7 +17,7 @@
 
 static void get_files(int windex);
 
-static bool is_dir(char* path) {
+bool is_dir(char* path) {
     struct stat s;
     return ((stat(path, &s) == 0) && (s.st_mode & S_IFDIR));
 }

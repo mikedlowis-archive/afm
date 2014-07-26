@@ -25,4 +25,8 @@ typedef struct {
     WorkDir_T* workdir;
 } frame_t;
 
+enum ColorPairs {
+	DIRECTORY = 1
+};
+
 #endif /* SCREEN_H */
