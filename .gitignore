@@ -23,3 +23,7 @@
 *.hex
 build/
 .rsconscache
+
+#swapfiles
+.*.swp
+
