@@ -118,8 +118,10 @@ char* pwd(){
 static frame_t* screen_frame_new(void) {
     frame_t* p_frame = (frame_t*)mem_allocate(sizeof(frame_t),&screen_frame_free);
     p_frame->p_win = newwin(1, 1, 0, 0);
-    char* path = state_get_focused_frame() ? state_get_focused_frame()->workdir->path : pwd();
+    bool first_window = !state_get_focused_frame();
+    char* path = first_window ? pwd() : state_get_focused_frame()->workdir->path;
     p_frame->workdir = workdir_new(path);
+    if(first_window) mem_release(path);
     return p_frame;
 }
 
