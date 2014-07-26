@@ -19,11 +19,11 @@ typedef struct {
 } WorkDir_T;
 
 typedef struct {
-	char* path;
-	char* name;
-	int uid;
-	int gid;
-	bool expanded;
+    char* path;
+    char* name;
+    int uid;
+    int gid;
+    bool expanded;
 } File_T;
 
 WorkDir_T* workdir_new(char* path);

@@ -23,11 +23,11 @@ bool is_dir(char* path) {
 }
 
 void populate_owner_info(File_T* p_file){
-	struct stat s;
-	if(stat(p_file->path, &s) == 0){
-		p_file->uid = s.st_uid;
-		p_file->gid = s.st_gid;
-	} //else error
+    struct stat s;
+    if(stat(p_file->path, &s) == 0){
+        p_file->uid = s.st_uid;
+        p_file->gid = s.st_gid;
+    } //else error
 }
 
 void workdir_free(void* p_wd);
@@ -56,27 +56,27 @@ void file_free(void* p_vfile){
 }
 
 void workdir_set_idx(WorkDir_T* wd, int idx){
-	wd->idx = idx;
-	if(idx < 0) wd->idx = 0;
-	else if(idx >= vec_size(wd->vfiles))
-		wd->idx = vec_size(wd->vfiles)-1;
-	state_set_screen_dirty(true);
+    wd->idx = idx;
+    if(idx < 0) wd->idx = 0;
+    else if(idx >= vec_size(wd->vfiles))
+        wd->idx = vec_size(wd->vfiles)-1;
+    state_set_screen_dirty(true);
 }
 
 void workdir_next(WorkDir_T* wd) {
-	workdir_set_idx(wd, wd->idx+1);
+    workdir_set_idx(wd, wd->idx+1);
 }
 
 void workdir_prev(WorkDir_T* wd) {
-	workdir_set_idx(wd, wd->idx-1);
+    workdir_set_idx(wd, wd->idx-1);
 }
 
 void workdir_scroll_to_top(WorkDir_T* wd){
-	workdir_set_idx(wd, 0);
+    workdir_set_idx(wd, 0);
 }
 
 void workdir_scroll_to_bot(WorkDir_T* wd){
-	workdir_set_idx(wd, vec_size(wd->vfiles) - 1);
+    workdir_set_idx(wd, vec_size(wd->vfiles) - 1);
 }
 
 void workdir_cd(WorkDir_T* wd) {
@@ -148,8 +148,8 @@ void workdir_ls(WorkDir_T* wd){
         }
         strcat(file->path, filename);
         file->name = &(file->path[filename_offset]);
-		populate_owner_info(file);
-		file->expanded = false;
+        populate_owner_info(file);
+        file->expanded = false;
         vec_push_back(wd->vfiles, file);
     }
     free(filename);
@@ -158,18 +158,18 @@ void workdir_ls(WorkDir_T* wd){
 }
 
 void workdir_seek(WorkDir_T* wd, char* search){
-	int i = 0;
-	if(strcmp(((File_T*)vec_at(wd->vfiles, 0))->name, "..") == 0) i++;
-	while(i < vec_size(wd->vfiles) && strcmp(((File_T*)vec_at(wd->vfiles, i))->name, search) < 0) i++;
-	workdir_set_idx(wd, i);
+    int i = 0;
+    if(strcmp(((File_T*)vec_at(wd->vfiles, 0))->name, "..") == 0) i++;
+    while(i < vec_size(wd->vfiles) && strcmp(((File_T*)vec_at(wd->vfiles, i))->name, search) < 0) i++;
+    workdir_set_idx(wd, i);
 }
 
 void workdir_expand_selected(WorkDir_T* wd){
-	((File_T*)vec_at(wd->vfiles, wd->idx))->expanded = true;
-	state_set_screen_dirty(true);
+    ((File_T*)vec_at(wd->vfiles, wd->idx))->expanded = true;
+    state_set_screen_dirty(true);
 }
 void workdir_collapse_selected(WorkDir_T* wd){
-	((File_T*)vec_at(wd->vfiles, wd->idx))->expanded = false;
-	state_set_screen_dirty(true);
+    ((File_T*)vec_at(wd->vfiles, wd->idx))->expanded = false;
+    state_set_screen_dirty(true);
 }
 

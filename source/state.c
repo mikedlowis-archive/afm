@@ -59,7 +59,7 @@ void state_set_aardvark_mode(bool val)
 }
 
 frame_t* state_get_focused_frame(void) {
-	return Focused_Frame;
+    return Focused_Frame;
 }
 
 void state_set_focused_frame(frame_t *p_frame)
@@ -68,10 +68,10 @@ void state_set_focused_frame(frame_t *p_frame)
 }
 
 Mode_T state_get_mode(){
-	return CurrentMode;
+    return CurrentMode;
 }
 
 void state_set_mode(Mode_T m){
-	CurrentMode = m;
+    CurrentMode = m;
 }
 

@@ -36,53 +36,53 @@ static void handle_cd(void) {
 }
 
 static void handle_scroll_to_top(void) {
-	workdir_scroll_to_top(state_get_focused_frame()->workdir);
+    workdir_scroll_to_top(state_get_focused_frame()->workdir);
 }
 static void handle_scroll_to_bottom(void) {
-	workdir_scroll_to_bot(state_get_focused_frame()->workdir);
+    workdir_scroll_to_bot(state_get_focused_frame()->workdir);
 }
 static void handle_page_up(void){
-	screen_frame_page_up(state_get_focused_frame());
+    screen_frame_page_up(state_get_focused_frame());
 }
 static void handle_page_down(void){
-	screen_frame_page_down(state_get_focused_frame());
+    screen_frame_page_down(state_get_focused_frame());
 }
 static void handle_expand(void){
-	workdir_expand_selected(state_get_focused_frame()->workdir);
+    workdir_expand_selected(state_get_focused_frame()->workdir);
 }
 static void handle_collapse(void){
-	workdir_collapse_selected(state_get_focused_frame()->workdir);
+    workdir_collapse_selected(state_get_focused_frame()->workdir);
 }
 
 
 static void search_mode(void){
-	int searchcap = 8;
-	char* searchstr = malloc(sizeof(char)*searchcap);
-	int searchlen = 0;
-	bool searching = true;
-	state_set_mode(MODE_SEARCH);
-	while(searching){
-		char inpt = getch();
-		if(inpt == ERR){ /* do nothing */
-		}else if(inpt == ESC){
-			searching = false;
-		}else if (inpt == '\n'){
-			searching = false;
-			handle_cd();
-		}else{
-			if(searchlen+1 >= searchcap){
-				searchcap *= 2;
-				searchstr = realloc(searchstr, sizeof(char)*searchcap);
-			}
-			searchstr[searchlen] = inpt;
-			searchlen += 1;
-			searchstr[searchlen] = 0;
-			workdir_seek(state_get_focused_frame()->workdir, searchstr);
-		}
+    int searchcap = 8;
+    char* searchstr = malloc(sizeof(char)*searchcap);
+    int searchlen = 0;
+    bool searching = true;
+    state_set_mode(MODE_SEARCH);
+    while(searching){
+        char inpt = getch();
+        if(inpt == ERR){ /* do nothing */
+        }else if(inpt == ESC){
+            searching = false;
+        }else if (inpt == '\n'){
+            searching = false;
+            handle_cd();
+        }else{
+            if(searchlen+1 >= searchcap){
+                searchcap *= 2;
+                searchstr = realloc(searchstr, sizeof(char)*searchcap);
+            }
+            searchstr[searchlen] = inpt;
+            searchlen += 1;
+            searchstr[searchlen] = 0;
+            workdir_seek(state_get_focused_frame()->workdir, searchstr);
+        }
         if(state_get_screen_dirty()) screen_update();
-	}
-	free(searchstr);
-	state_set_mode(MODE_NORMAL);
+    }
+    free(searchstr);
+    state_set_mode(MODE_NORMAL);
 }
 
 static binding_t Default_Bindings[] = {

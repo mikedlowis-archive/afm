@@ -27,7 +27,7 @@ typedef struct {
 } frame_t;
 
 enum ColorPairs {
-	DIRECTORY = 1
+    DIRECTORY = 1
 };
 
 void screen_frame_page_up(frame_t* p_frame);
