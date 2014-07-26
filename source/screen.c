@@ -2,6 +2,7 @@
 #include <ncurses.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 /* internal libraries */
 #include "vec.h"
@@ -103,10 +104,20 @@ static void screen_place_windows(void) {
     }
 }
 
+//get the curent directory and copy it into a ref-counted memory block
+//return a pointer to the new block
+char* pwd(){
+	char* dir = getcwd(NULL, 0);
+	char* rid = mem_allocate(sizeof(char)*strlen(dir), NULL);
+	strcpy(rid, dir);
+	free(dir);
+	return rid;
+}
+
 static frame_t* screen_frame_new(void) {
     frame_t* p_frame = (frame_t*)mem_allocate(sizeof(frame_t),&screen_frame_free);
     p_frame->p_win = newwin(1, 1, 0, 0);
-    char* path = state_get_focused_frame() ? state_get_focused_frame()->workdir->path : getcwd(NULL, 0);
+    char* path = state_get_focused_frame() ? state_get_focused_frame()->workdir->path : pwd();
     p_frame->workdir = workdir_new(path);
     return p_frame;
 }

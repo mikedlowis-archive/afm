@@ -24,6 +24,7 @@ WorkDir_T* workdir_new(char* path){
     WorkDir_T* wd = mem_allocate(sizeof(WorkDir_T), &workdir_free);
     wd->idx = 0;
     wd->path = path;
+    mem_retain(path);
     wd->vfiles = vec_new(0);
     workdir_ls(wd);
     wd->top_index = 0;
@@ -33,6 +34,7 @@ WorkDir_T* workdir_new(char* path){
 void workdir_free(void* p_wd){
     WorkDir_T* wd = (WorkDir_T*)p_wd;
     mem_release(wd->vfiles);
+    mem_release(wd->path);
 }
 
 void workdir_next(WorkDir_T* wd) {
@@ -93,7 +95,7 @@ char* workdir_cd_down(WorkDir_T* wd){
 void workdir_cd(WorkDir_T* wd) {
     char* newpath = (wd->idx == 0) ? workdir_cd_up(wd) : workdir_cd_down(wd);
     if(is_dir(newpath)){
-        //TODO: this segfaults: mem_release(wd->path);
+        mem_release(wd->path);
         wd->path = newpath;
         wd->idx = 0;
         wd->top_index = 0;
