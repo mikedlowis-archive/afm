@@ -50,7 +50,8 @@ void file_free(void* p_vfile){
 void workdir_set_idx(WorkDir_T* wd, int idx){
 	wd->idx = idx;
 	if(idx < 0) wd->idx = 0;
-	if(idx >= vec_size(wd->vfiles)) wd->idx = vec_size(wd->vfiles)-1;
+	else if(idx >= vec_size(wd->vfiles))
+		wd->idx = vec_size(wd->vfiles)-1;
 	state_set_screen_dirty(true);
 }
 
@@ -68,14 +69,6 @@ void workdir_scroll_to_top(WorkDir_T* wd){
 
 void workdir_scroll_to_bot(WorkDir_T* wd){
 	workdir_set_idx(wd, vec_size(wd->vfiles) - 1);
-}
-
-void workdir_jump_up(WorkDir_T* wd){
-	workdir_set_idx(wd, wd->idx - 20);
-}
-
-void workdir_jump_down(WorkDir_T* wd){
-	workdir_set_idx(wd, wd->idx + 20);
 }
 
 void workdir_cd(WorkDir_T* wd) {

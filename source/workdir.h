@@ -29,6 +29,8 @@ void workdir_prev(WorkDir_T*);
 
 void workdir_next(WorkDir_T*);
 
+void workdir_set_idx(WorkDir_T* wd, int idx);
+
 void workdir_cd(WorkDir_T*);
 
 void workdir_ls(WorkDir_T*);
@@ -39,7 +41,5 @@ void workdir_seek(WorkDir_T* wd, char* search);
 
 void workdir_scroll_to_top(WorkDir_T* wd);
 void workdir_scroll_to_bot(WorkDir_T* wd);
-void workdir_jump_down(WorkDir_T* wd);
-void workdir_jump_up(WorkDir_T* wd);
 
 #endif /* WORKDIR_H */

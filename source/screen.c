@@ -172,4 +172,16 @@ void screen_frame_draw_files(frame_t* frame){
     }
 }
 
+int realrows(frame_t* p_frame){
+	int rows, cols;
+	getmaxyx(p_frame->p_win, rows, cols);
+	return rows - FrameTopBuffer - FrameBotBuffer;
+}
+void screen_frame_page_up(frame_t* p_frame){
+	workdir_set_idx(p_frame->workdir, p_frame->workdir->idx - realrows(p_frame));
+}
+
+void screen_frame_page_down(frame_t* p_frame){
+	workdir_set_idx(p_frame->workdir, p_frame->workdir->idx+realrows(p_frame));
+}
 

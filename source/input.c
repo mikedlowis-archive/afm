@@ -42,10 +42,10 @@ static void handle_scroll_to_bottom(void) {
 	workdir_scroll_to_bot(state_get_focused_frame()->workdir);
 }
 static void handle_page_up(void){
-	workdir_jump_up(state_get_focused_frame()->workdir);
+	screen_frame_page_up(state_get_focused_frame());
 }
 static void handle_page_down(void){
-	workdir_jump_down(state_get_focused_frame()->workdir);
+	screen_frame_page_down(state_get_focused_frame());
 }
 
 
