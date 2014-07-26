@@ -178,10 +178,7 @@ void screen_frame_draw_files(frame_t* frame){
             mvwprintw(frame->p_win, frame_i, 1, "    owned by user id %d, group id %d", file->uid, file->gid);
             frame_i++;
         }
-        if(frame == state_get_focused_frame() && file_i == frame->workdir->idx){
-            wattroff(frame->p_win, A_STANDOUT | A_BOLD);
-        }
-        if(dir) wattroff(frame->p_win, COLOR_PAIR(DIRECTORY));
+        wstandend(frame->p_win);
         file_i++;
         if((frame_i+FrameBotBuffer) > rows) break;
     }
