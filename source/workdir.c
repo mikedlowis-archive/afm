@@ -87,14 +87,9 @@ char* workdir_cd_up(WorkDir_T* wd){
 
 //go down a directory: append '/subdir' to path
 char* workdir_cd_down(WorkDir_T* wd){
-    char* subdir = vec_at(wd->vfiles, wd->idx);
-    int oldpathlen = strlen(wd->path);
-    int newpathlen = oldpathlen + strlen(subdir) + 2; //+2, for slash & end null;
-    char *newpath = mem_allocate(sizeof(char)*newpathlen, NULL);
-    strcpy(newpath, wd->path);
-    if(oldpathlen == 0 || wd->path[oldpathlen-1] != '/') strcat(newpath, "/");
-    strcat(newpath, subdir);
-    return newpath;
+	char* newpath = (char*) vec_at(wd->vfiles, wd->idx);
+	mem_retain(newpath);
+	return newpath;
 }
 
 void workdir_cd(WorkDir_T* wd) {
@@ -118,6 +113,7 @@ void workdir_ls(WorkDir_T* wd){
     ssize_t read;
     char* filename = 0;
     FILE* ls;
+    int pathlength = strlen(wd->path);
     //free old file vector
     if(wd->vfiles) mem_release(wd->vfiles);
     //open new ls pipe
@@ -132,9 +128,11 @@ void workdir_ls(WorkDir_T* wd){
     else
         mem_release(dotdot);
     while ((read = getline(&filename, &len, ls)) != -1){
-        char* lol = mem_allocate(read*sizeof(char), NULL);
+        char* lol = mem_allocate((pathlength+read+1)*sizeof(char), NULL);
         filename[read-1]=0; //remove ending newline
-        strcpy(lol, filename);
+        strcpy(lol, wd->path);
+        if (wd->path[pathlength-1] != '/') strcat(lol, "/");
+        strcat(lol, filename);
         vec_push_back(wd->vfiles, lol);
     }
     free(filename);

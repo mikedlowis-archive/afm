@@ -7,7 +7,10 @@
 #ifndef WORKDIR_H
 #define WORKDIR_H
 
+#include <stdbool.h>
 #include "vec.h"
+
+static bool is_dir(char* path);
 
 void workdir_deinit(void);
 

@@ -136,6 +136,7 @@ static void screen_frame_free(void* p_frame_ptr) {
 void screen_frame_draw_files(frame_t* frame){
     int i = frame->workdir->top_index;
     int rows, cols;
+    int pathlength = strlen(frame->workdir->path);
     getmaxyx(frame->p_win, rows, cols);
     //draw path
     wattron(frame->p_win, A_UNDERLINE);
@@ -143,11 +144,14 @@ void screen_frame_draw_files(frame_t* frame){
     wattroff(frame->p_win, A_UNDERLINE);
     //list files
     while (i < vec_size(frame->workdir->vfiles)){
+        char* filename = (char*)vec_at(frame->workdir->vfiles, i);
+        if(strcmp(filename, "..") != 0) filename = &(filename[pathlength]);
+        if(filename[0] == '/') filename = &(filename[1]);
         if(frame == state_get_focused_frame() && i == frame->workdir->idx){
             wattron(frame->p_win, A_STANDOUT);
             wattron(frame->p_win, A_BOLD);
         }
-        mvwaddnstr(frame->p_win, FrameTopBuffer+i-frame->workdir->top_index, 1, vec_at(frame->workdir->vfiles, i), cols-2);
+        mvwaddnstr(frame->p_win, FrameTopBuffer+i-frame->workdir->top_index, 1, filename, cols-2);
         if(frame == state_get_focused_frame() && i == frame->workdir->idx){
             wattroff(frame->p_win, A_STANDOUT);
             wattroff(frame->p_win, A_BOLD);
