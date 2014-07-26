@@ -78,7 +78,7 @@ char* workdir_cd_up(WorkDir_T* wd){
         newpath = mem_allocate(sizeof(char)*2, NULL);
         strcpy(newpath, "/");
     } else {
-        newpath = mem_allocate(sizeof(char)*last_slash, NULL);
+        newpath = mem_allocate(sizeof(char)*(1+last_slash), NULL);
         strncpy(newpath, wd->path, last_slash);
         newpath[last_slash] = 0;
     }
