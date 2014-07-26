@@ -37,7 +37,6 @@ WorkDir_T* workdir_new(char* path){
 
 void workdir_free(void* p_wd){
     WorkDir_T* wd = (WorkDir_T*)p_wd;
-    fprintf(stderr, "freeing workdir\n");
     mem_release(wd->vfiles);
     mem_release(wd->path);
 }
