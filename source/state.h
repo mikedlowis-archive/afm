@@ -10,6 +10,8 @@
 #include <stdbool.h>
 #include "screen.h"
 
+typedef enum{ MODE_NORMAL, MODE_SEARCH } MODE;
+
 bool state_get_running(void);
 void state_set_running(bool val);
 bool state_get_screen_dirty(void);

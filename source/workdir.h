@@ -36,4 +36,11 @@ void workdir_ls(WorkDir_T*);
 
 bool is_dir(char* path);
 
+void workdir_seek(WorkDir_T* wd, char* search);
+
+void workdir_scroll_to_top(WorkDir_T* wd);
+void workdir_scroll_to_bot(WorkDir_T* wd);
+void workdir_jump_down(WorkDir_T* wd);
+void workdir_jump_up(WorkDir_T* wd);
+
 #endif /* WORKDIR_H */

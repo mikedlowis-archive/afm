@@ -149,3 +149,32 @@ void workdir_ls(WorkDir_T* wd){
     mem_release(cmd);
 }
 
+void workdir_seek(WorkDir_T* wd, char* search){
+	int i = 0;
+	if(strcmp(((File_T*)vec_at(wd->vfiles, 0))->name, "..") == 0) i++;
+	while(i < vec_size(wd->vfiles) && strcmp(search, ((File_T*)vec_at(wd->vfiles, i))->name) < 0) i++;
+	wd->idx = i;
+}
+
+void workdir_scroll_to_top(WorkDir_T* wd){
+	wd->idx = 0;
+    state_set_screen_dirty(true);
+}
+
+void workdir_scroll_to_bot(WorkDir_T* wd){
+	wd->idx = vec_size(wd->vfiles) - 1;
+    state_set_screen_dirty(true);
+}
+
+void workdir_jump_up(WorkDir_T* wd){
+	wd->idx -= 20;
+	if(wd->idx < 0) wd->idx = 0;
+    state_set_screen_dirty(true);
+}
+
+void workdir_jump_down(WorkDir_T* wd){
+	wd->idx += 20;
+	if(wd->idx >= vec_size(wd->vfiles)) wd->idx = vec_size(wd->vfiles)-1;
+    state_set_screen_dirty(true);
+}
+

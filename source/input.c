@@ -33,6 +33,22 @@ static void handle_cd(void) {
     workdir_cd(state_get_focused_frame()->workdir);
 }
 
+static void handle_scroll_to_top(void) {
+	workdir_scroll_to_top(state_get_focused_frame()->workdir);
+}
+static void handle_scroll_to_bottom(void) {
+	workdir_scroll_to_bot(state_get_focused_frame()->workdir);
+}
+static void handle_page_up(void){
+	workdir_jump_up(state_get_focused_frame()->workdir);
+}
+static void handle_page_down(void){
+	workdir_jump_down(state_get_focused_frame()->workdir);
+}
+
+static void search_mode(void){
+}
+
 static binding_t Default_Bindings[] = {
     { "a",  &handle_aardvark },
     { "q",  &handle_quit },
@@ -41,6 +57,11 @@ static binding_t Default_Bindings[] = {
     { "\n", &handle_cd },
     { "wn", &screen_open },
     { "wc", &screen_close },
+    { "/",  &search_mode },
+    { "gg", &handle_scroll_to_top },
+    { "G",  &handle_scroll_to_bottom },
+    { "U",  &handle_page_up },
+    { "D",  &handle_page_down },
     //{ "wj", NULL },
     //{ "wk", NULL },
 };
