@@ -130,9 +130,8 @@ void workdir_ls(WorkDir_T* wd){
         filename[read-1]=0; //remove ending newline
         strcpy(lol, filename);
         vec_push_back(wd->vfiles, lol);
-        free(filename);
-        filename = 0;
     }
+    free(filename);
     pclose(ls);
     //mem_release(dotdot); #dont free, because there's a bug(?) in vectors and reference counting
     //reference counter is not incremented for added items, so releasinghere will free the memory
