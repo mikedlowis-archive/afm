@@ -21,6 +21,9 @@ typedef struct {
 typedef struct {
 	char* path;
 	char* name;
+	int uid;
+	int gid;
+	bool expanded;
 } File_T;
 
 WorkDir_T* workdir_new(char* path);
@@ -41,5 +44,8 @@ void workdir_seek(WorkDir_T* wd, char* search);
 
 void workdir_scroll_to_top(WorkDir_T* wd);
 void workdir_scroll_to_bot(WorkDir_T* wd);
+
+void workdir_expand_selected(WorkDir_T* wd);
+void workdir_collapse_selected(WorkDir_T* wd);
 
 #endif /* WORKDIR_H */

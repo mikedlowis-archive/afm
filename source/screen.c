@@ -144,31 +144,36 @@ static void screen_frame_scroll(frame_t* p_frame){
 }
 
 void screen_frame_draw_files(frame_t* frame){
-    int i;
+    int file_i, frame_i = FrameTopBuffer;
     int rows, cols;
     int pathlength = strlen(frame->workdir->path);
     getmaxyx(frame->p_win, rows, cols);
     screen_frame_scroll(frame);
-    i = frame->top_index;
+    file_i = frame->top_index;
     //draw path
     wattron(frame->p_win, A_UNDERLINE);
     mvwaddnstr(frame->p_win, 1, 1, frame->workdir->path, cols-2);
     wattroff(frame->p_win, A_UNDERLINE);
     //list files
-    while (i < vec_size(frame->workdir->vfiles)){
-        File_T* file = (File_T*)vec_at(frame->workdir->vfiles, i);
+    while (file_i < vec_size(frame->workdir->vfiles)){
+        File_T* file = (File_T*)vec_at(frame->workdir->vfiles, file_i);
         bool dir = is_dir(file->path);
-        if(frame == state_get_focused_frame() && i == frame->workdir->idx){
+        if(frame == state_get_focused_frame() && file_i == frame->workdir->idx){
             wattron(frame->p_win, A_STANDOUT | A_BOLD);
         }
         if(dir) wattron(frame->p_win, COLOR_PAIR(DIRECTORY));
-        mvwaddnstr(frame->p_win, FrameTopBuffer+i-frame->top_index, 1, file->name, cols-2);
-        if(frame == state_get_focused_frame() && i == frame->workdir->idx){
+        mvwaddnstr(frame->p_win, frame_i, 1, file->name, cols-2);
+        frame_i++;
+        if(file->expanded){
+			mvwprintw(frame->p_win, frame_i, 1, "    owned by user id %d, group id %d", file->uid, file->gid);
+			frame_i++;
+		}
+        if(frame == state_get_focused_frame() && file_i == frame->workdir->idx){
             wattroff(frame->p_win, A_STANDOUT | A_BOLD);
         }
         if(dir) wattroff(frame->p_win, COLOR_PAIR(DIRECTORY));
-        i++;
-        if((FrameTopBuffer+i-frame->top_index+FrameBotBuffer) > rows) break;
+        file_i++;
+        if((frame_i+FrameBotBuffer) > rows) break;
     }
 }
 

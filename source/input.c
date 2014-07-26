@@ -47,6 +47,12 @@ static void handle_page_up(void){
 static void handle_page_down(void){
 	screen_frame_page_down(state_get_focused_frame());
 }
+static void handle_expand(void){
+	workdir_expand_selected(state_get_focused_frame()->workdir);
+}
+static void handle_collapse(void){
+	workdir_collapse_selected(state_get_focused_frame()->workdir);
+}
 
 
 static void search_mode(void){
@@ -92,6 +98,8 @@ static binding_t Default_Bindings[] = {
     { "G",  &handle_scroll_to_bottom },
     { "U",  &handle_page_up },
     { "D",  &handle_page_down },
+    { "l",  &handle_expand },
+    { "h",  &handle_collapse },
     //{ "wj", NULL },
     //{ "wk", NULL },
 };

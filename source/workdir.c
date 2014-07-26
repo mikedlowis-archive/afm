@@ -22,6 +22,14 @@ bool is_dir(char* path) {
     return ((stat(path, &s) == 0) && (s.st_mode & S_IFDIR));
 }
 
+void populate_owner_info(File_T* p_file){
+	struct stat s;
+	if(stat(p_file->path, &s) == 0){
+		p_file->uid = s.st_uid;
+		p_file->gid = s.st_gid;
+	} //else error
+}
+
 void workdir_free(void* p_wd);
 
 WorkDir_T* workdir_new(char* path){
@@ -88,6 +96,7 @@ File_T* make_dotdot(char* path){
     int last_slash = 0;
     if(strcmp(path, "/") != 0){
         dd = mem_allocate(sizeof(File_T), &file_free);
+        dd->expanded = false;
         dd->name = mem_allocate(sizeof(char)*3, NULL);
         strcpy(dd->name, "..");
         for(int i=0; path[i] != 0; i++){
@@ -139,6 +148,8 @@ void workdir_ls(WorkDir_T* wd){
         }
         strcat(file->path, filename);
         file->name = &(file->path[filename_offset]);
+		populate_owner_info(file);
+		file->expanded = false;
         vec_push_back(wd->vfiles, file);
     }
     free(filename);
@@ -153,4 +164,12 @@ void workdir_seek(WorkDir_T* wd, char* search){
 	workdir_set_idx(wd, i);
 }
 
+void workdir_expand_selected(WorkDir_T* wd){
+	((File_T*)vec_at(wd->vfiles, wd->idx))->expanded = true;
+	state_set_screen_dirty(true);
+}
+void workdir_collapse_selected(WorkDir_T* wd){
+	((File_T*)vec_at(wd->vfiles, wd->idx))->expanded = false;
+	state_set_screen_dirty(true);
+}
 
