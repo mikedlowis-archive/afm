@@ -43,10 +43,9 @@ void workdir_free(void* p_wd){
 
 void file_free(void* p_vfile){
     File_T* p_file = (File_T*) p_vfile;
-    //TODO: name should point somewhere in path
-    //and should only need to be freed for special value '..'
+    //only free name if == special value '..'. else will be location in path
+    if(strcmp(p_file->name, "..") == 0) mem_release(p_file->name);
     mem_release(p_file->path);
-    mem_release(p_file->name);
 }
 
 void workdir_next(WorkDir_T* wd) {
@@ -132,19 +131,19 @@ void workdir_ls(WorkDir_T* wd){
     if(dd) vec_push_back(wd->vfiles, dd);
     while ((read = getline(&filename, &len, ls)) != -1){
         char* fullpath = mem_allocate((pathlength+read+1)*sizeof(char), NULL);
-        //TODO: file name should be pointer to somewhere in path (fullpath+pathlength)
-        char* refcounted_name = mem_allocate((read)*sizeof(char), NULL);
+        int filename_offset = pathlength;
         File_T* file = mem_allocate(sizeof(File_T), &file_free);
         filename[read-1]=0; //remove ending newline
         //build full path:
         strcpy(fullpath, wd->path);
-        if (wd->path[pathlength-1] != '/') strcat(fullpath, "/");
+        if (wd->path[pathlength-1] != '/') {
+            strcat(fullpath, "/");
+            filename_offset += 1;
+        }
         strcat(fullpath, filename);
-        //copy read name into refcounted name:
-        strcpy(refcounted_name, filename);
         //build file:
         file->path = fullpath;
-        file->name = refcounted_name;
+        file->name = &(file->path[filename_offset]);
         vec_push_back(wd->vfiles, file);
     }
     free(filename);
