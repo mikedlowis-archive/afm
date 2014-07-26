@@ -133,8 +133,6 @@ void workdir_ls(WorkDir_T* wd){
     }
     free(filename);
     pclose(ls);
-    //mem_release(dotdot); #dont free, because there's a bug(?) in vectors and reference counting
-    //reference counter is not incremented for added items, so releasinghere will free the memory
     mem_release(cmd);
 }
 
