@@ -19,6 +19,11 @@ typedef struct {
     int top_index;
 } WorkDir_T;
 
+typedef struct {
+	char* path;
+	char* name;
+} File_T;
+
 WorkDir_T* workdir_new(char* path);
 
 void workdir_prev(WorkDir_T*);

@@ -144,19 +144,15 @@ void screen_frame_draw_files(frame_t* frame){
     wattroff(frame->p_win, A_UNDERLINE);
     //list files
     while (i < vec_size(frame->workdir->vfiles)){
-        char* filename = (char*)vec_at(frame->workdir->vfiles, i);
-        bool dir = is_dir(filename);
-        if(strcmp(filename, "..") != 0) filename = &(filename[pathlength]);
-        if(filename[0] == '/') filename = &(filename[1]);
+        File_T* file = (File_T*)vec_at(frame->workdir->vfiles, i);
+        bool dir = is_dir(file->path);
         if(frame == state_get_focused_frame() && i == frame->workdir->idx){
-            wattron(frame->p_win, A_STANDOUT);
-            wattron(frame->p_win, A_BOLD);
+            wattron(frame->p_win, A_STANDOUT | A_BOLD);
         }
         if(dir) wattron(frame->p_win, COLOR_PAIR(DIRECTORY));
-        mvwaddnstr(frame->p_win, FrameTopBuffer+i-frame->workdir->top_index, 1, filename, cols-2);
+        mvwaddnstr(frame->p_win, FrameTopBuffer+i-frame->workdir->top_index, 1, file->name, cols-2);
         if(frame == state_get_focused_frame() && i == frame->workdir->idx){
-            wattroff(frame->p_win, A_STANDOUT);
-            wattroff(frame->p_win, A_BOLD);
+            wattroff(frame->p_win, A_STANDOUT | A_BOLD);
         }
         if(dir) wattroff(frame->p_win, COLOR_PAIR(DIRECTORY));
         i++;

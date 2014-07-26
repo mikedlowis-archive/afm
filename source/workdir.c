@@ -41,6 +41,14 @@ void workdir_free(void* p_wd){
     mem_release(wd->path);
 }
 
+void file_free(void* p_vfile){
+    File_T* p_file = (File_T*) p_vfile;
+    //TODO: name should point somewhere in path
+    //and should only need to be freed for special value '..'
+    mem_release(p_file->path);
+    mem_release(p_file->name);
+}
+
 void workdir_next(WorkDir_T* wd) {
     //do nothing if at the end of the file list
     if(wd->idx < vec_size(wd->vfiles)-1){
@@ -66,49 +74,50 @@ void workdir_prev(WorkDir_T* wd) {
     state_set_screen_dirty(true);
 }
 
-//go up a directory: remove everything after (including) last '/' character
-char* workdir_cd_up(WorkDir_T* wd){
-    int last_slash = 0, i = 0;
-    char* newpath;
-    while(wd->path[i] != 0){
-        if(wd->path[i] == '/') last_slash = i;
-        i++;
-    }
-    if(last_slash == 0){
-        newpath = mem_allocate(sizeof(char)*2, NULL);
-        strcpy(newpath, "/");
-    } else {
-        newpath = mem_allocate(sizeof(char)*(1+last_slash), NULL);
-        strncpy(newpath, wd->path, last_slash);
-        newpath[last_slash] = 0;
-    }
-    return newpath;
-}
-
-//go down a directory: append '/subdir' to path
-char* workdir_cd_down(WorkDir_T* wd){
-	char* newpath = (char*) vec_at(wd->vfiles, wd->idx);
-	mem_retain(newpath);
-	return newpath;
-}
-
 void workdir_cd(WorkDir_T* wd) {
-    char* newpath = (wd->idx == 0) ? workdir_cd_up(wd) : workdir_cd_down(wd);
+    char* newpath = ((File_T*) vec_at(wd->vfiles, wd->idx))->path;
     if(is_dir(newpath)){
         mem_release(wd->path);
         wd->path = newpath;
+        mem_retain(wd->path);
         wd->idx = 0;
         wd->top_index = 0;
-    }else{
-        mem_release(newpath);
     }
     workdir_ls(wd);
     state_set_screen_dirty(true);
 }
 
+File_T* make_dotdot(char* path){
+    File_T* dd = NULL;
+    int last_slash = 0;
+    if(strcmp(path, "/") != 0){
+        dd = mem_allocate(sizeof(File_T), &file_free);
+        dd->name = mem_allocate(sizeof(char)*3, NULL);
+        strcpy(dd->name, "..");
+        for(int i=0; path[i] != 0; i++){
+            if(path[i] == '/') last_slash = i;
+        }
+        if(last_slash == 0){
+            dd->path = mem_allocate(sizeof(char)*2, NULL);
+            strcpy(dd->path, "/");
+        } else {
+            dd->path = mem_allocate(sizeof(char)*(1+last_slash), NULL);
+            strncpy(dd->path, path, last_slash);
+            dd->path[last_slash] = 0;
+        }
+    }
+    return dd;
+}
+
+char* ls_command(char* path){
+    char* cmd = mem_allocate(sizeof(char) * (4+(strlen(path))), NULL);
+    strcpy(cmd, "ls ");
+    strcat(cmd, path);
+}
+
 void workdir_ls(WorkDir_T* wd){
-    char* dotdot = mem_allocate(sizeof(char) * 3, NULL);
-    char* cmd = mem_allocate(sizeof(char) * (4+(strlen(wd->path))), NULL);
+    File_T* dd = make_dotdot(wd->path);
+    char* cmd = ls_command(wd->path);
     size_t len = 0; //unused. reflects sized allocated for buffer (filename) by getline
     ssize_t read;
     char* filename = 0;
@@ -117,23 +126,26 @@ void workdir_ls(WorkDir_T* wd){
     //free old file vector
     if(wd->vfiles) mem_release(wd->vfiles);
     //open new ls pipe
-    strcpy(cmd, "ls ");
-    strcat(cmd, wd->path);
     ls = popen(cmd, "r");
-    strcpy(dotdot, "..");
     //initialize new file vector
     wd->vfiles = vec_new(0);
-    if (strcmp(wd->path, "/") != 0)
-        vec_push_back(wd->vfiles, dotdot);
-    else
-        mem_release(dotdot);
+    if(dd) vec_push_back(wd->vfiles, dd);
     while ((read = getline(&filename, &len, ls)) != -1){
-        char* lol = mem_allocate((pathlength+read+1)*sizeof(char), NULL);
+        char* fullpath = mem_allocate((pathlength+read+1)*sizeof(char), NULL);
+        //TODO: file name should be pointer to somewhere in path (fullpath+pathlength)
+        char* refcounted_name = mem_allocate((read)*sizeof(char), NULL);
+        File_T* file = mem_allocate(sizeof(File_T), &file_free);
         filename[read-1]=0; //remove ending newline
-        strcpy(lol, wd->path);
-        if (wd->path[pathlength-1] != '/') strcat(lol, "/");
-        strcat(lol, filename);
-        vec_push_back(wd->vfiles, lol);
+        //build full path:
+        strcpy(fullpath, wd->path);
+        if (wd->path[pathlength-1] != '/') strcat(fullpath, "/");
+        strcat(fullpath, filename);
+        //copy read name into refcounted name:
+        strcpy(refcounted_name, filename);
+        //build file:
+        file->path = fullpath;
+        file->name = refcounted_name;
+        vec_push_back(wd->vfiles, file);
     }
     free(filename);
     pclose(ls);
