@@ -33,6 +33,7 @@ void screen_init(void) {
 }
 
 void screen_deinit(void) {
+	fprintf(stderr, "deinitializing screen\n");
     mem_release(Screen_List);
 }
 
@@ -123,6 +124,7 @@ static frame_t* screen_frame_new(void) {
 }
 
 static void screen_frame_free(void* p_frame_ptr) {
+	fprintf(stderr, "freeing frame\n");
     frame_t* p_frame = (frame_t*)p_frame_ptr;
     wclear(p_frame->p_win);
     wborder(p_frame->p_win, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');

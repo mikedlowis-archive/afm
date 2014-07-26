@@ -1,3 +1,4 @@
+/* external libraries */
 #include <ncurses.h>
 #include <string.h>
 #include <stdlib.h>
@@ -5,8 +6,11 @@
 #include <unistd.h>
 #include <stdio.h>
 
+/* internal libraries */
 #include "vec.h"
 #include "mem.h"
+
+/* internal headers */
 #include "state.h"
 #include "workdir.h"
 #include "screen.h"
@@ -33,6 +37,7 @@ WorkDir_T* workdir_new(char* path){
 
 void workdir_free(void* p_wd){
     WorkDir_T* wd = (WorkDir_T*)p_wd;
+    fprintf(stderr, "freeing workdir\n");
     mem_release(wd->vfiles);
     mem_release(wd->path);
 }
@@ -128,6 +133,7 @@ void workdir_ls(WorkDir_T* wd){
         free(filename);
         filename = 0;
     }
+    pclose(ls);
     //mem_release(dotdot); #dont free, because there's a bug(?) in vectors and reference counting
     //reference counter is not incremented for added items, so releasinghere will free the memory
     mem_release(cmd);
