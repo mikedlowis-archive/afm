@@ -32,10 +32,10 @@ int main(int argc, char** argv) {
         if(state_get_screen_dirty()) screen_update();
         input_handle_key(getch());
     }
-    erase();
+    screen_deinit();
+    clear();
     refresh();
     endwin();
-    screen_deinit();
     return 0;
 }
 
