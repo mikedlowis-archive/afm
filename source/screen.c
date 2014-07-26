@@ -108,7 +108,7 @@ static void screen_place_windows(void) {
 //return a pointer to the new block
 char* pwd(){
 	char* dir = getcwd(NULL, 0);
-	char* rid = mem_allocate(sizeof(char)*strlen(dir), NULL);
+	char* rid = mem_allocate(sizeof(char)*(1+strlen(dir)), NULL);
 	strcpy(rid, dir);
 	free(dir);
 	return rid;
