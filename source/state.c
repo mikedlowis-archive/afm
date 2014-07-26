@@ -16,6 +16,8 @@ static bool AardvarkOn = false;
 /** A pointer to the currently focused frame */
 static frame_t* Focused_Frame = 0;
 
+static Mode_T CurrentMode = 0;
+
 bool state_get_running(void)
 {
     return Running;
@@ -63,5 +65,13 @@ frame_t* state_get_focused_frame(void) {
 void state_set_focused_frame(frame_t *p_frame)
 {
     Focused_Frame = p_frame;
+}
+
+Mode_T state_get_mode(){
+	return CurrentMode;
+}
+
+void state_set_mode(Mode_T m){
+	CurrentMode = m;
 }
 

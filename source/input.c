@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ESC 27
+
 typedef void (*key_cb_t)(void);
 
 typedef struct {
@@ -46,7 +48,35 @@ static void handle_page_down(void){
 	workdir_jump_down(state_get_focused_frame()->workdir);
 }
 
+
 static void search_mode(void){
+	int searchcap = 8;
+	char* searchstr = malloc(sizeof(char)*searchcap);
+	int searchlen = 0;
+	bool searching = true;
+	state_set_mode(MODE_SEARCH);
+	while(searching){
+		char inpt = getch();
+		if(inpt == ERR){ /* do nothing */
+		}else if(inpt == ESC){
+			searching = false;
+		}else if (inpt == '\n'){
+			searching = false;
+			handle_cd();
+		}else{
+			if(searchlen+1 >= searchcap){
+				searchcap *= 2;
+				searchstr = realloc(searchstr, sizeof(char)*searchcap);
+			}
+			searchstr[searchlen] = inpt;
+			searchlen += 1;
+			searchstr[searchlen] = 0;
+			workdir_seek(state_get_focused_frame()->workdir, searchstr);
+		}
+        if(state_get_screen_dirty()) screen_update();
+	}
+	free(searchstr);
+	state_set_mode(MODE_NORMAL);
 }
 
 static binding_t Default_Bindings[] = {

@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
     timeout(25);
     refresh();
     screen_init();
+    state_set_mode(MODE_NORMAL);
     while(state_get_running()) {
         if(state_get_screen_dirty()) screen_update();
         input_handle_key(getch());
