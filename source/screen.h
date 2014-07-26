@@ -23,6 +23,7 @@ static int FrameBotBuffer = 2;
 typedef struct {
     WINDOW* p_win;
     WorkDir_T* workdir;
+    int top_index;
 } frame_t;
 
 enum ColorPairs {

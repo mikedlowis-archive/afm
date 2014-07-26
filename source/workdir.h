@@ -16,7 +16,6 @@ typedef struct {
     int idx;
     char* path;
     vec_t* vfiles;
-    int top_index;
 } WorkDir_T;
 
 typedef struct {

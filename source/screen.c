@@ -117,6 +117,7 @@ char* pwd(){
 static frame_t* screen_frame_new(void) {
     frame_t* p_frame = (frame_t*)mem_allocate(sizeof(frame_t),&screen_frame_free);
     p_frame->p_win = newwin(1, 1, 0, 0);
+    p_frame->top_index = 0;
     bool first_window = !state_get_focused_frame();
     char* path = first_window ? pwd() : state_get_focused_frame()->workdir->path;
     p_frame->workdir = workdir_new(path);
@@ -133,11 +134,22 @@ static void screen_frame_free(void* p_frame_ptr) {
     if(p_frame->workdir) mem_release(p_frame->workdir);
 }
 
+static void screen_frame_scroll(frame_t* p_frame){
+	int rows,cols;
+	getmaxyx(p_frame->p_win, rows, cols);
+    if(p_frame->workdir->idx < p_frame->top_index)
+        p_frame->top_index = p_frame->workdir->idx;
+    else if (p_frame->top_index < p_frame->workdir->idx-(rows-FrameTopBuffer-FrameBotBuffer))
+        p_frame->top_index = p_frame->workdir->idx-(rows-FrameTopBuffer-FrameBotBuffer);
+}
+
 void screen_frame_draw_files(frame_t* frame){
-    int i = frame->workdir->top_index;
+    int i;
     int rows, cols;
     int pathlength = strlen(frame->workdir->path);
     getmaxyx(frame->p_win, rows, cols);
+    screen_frame_scroll(frame);
+    i = frame->top_index;
     //draw path
     wattron(frame->p_win, A_UNDERLINE);
     mvwaddnstr(frame->p_win, 1, 1, frame->workdir->path, cols-2);
@@ -150,13 +162,13 @@ void screen_frame_draw_files(frame_t* frame){
             wattron(frame->p_win, A_STANDOUT | A_BOLD);
         }
         if(dir) wattron(frame->p_win, COLOR_PAIR(DIRECTORY));
-        mvwaddnstr(frame->p_win, FrameTopBuffer+i-frame->workdir->top_index, 1, file->name, cols-2);
+        mvwaddnstr(frame->p_win, FrameTopBuffer+i-frame->top_index, 1, file->name, cols-2);
         if(frame == state_get_focused_frame() && i == frame->workdir->idx){
             wattroff(frame->p_win, A_STANDOUT | A_BOLD);
         }
         if(dir) wattroff(frame->p_win, COLOR_PAIR(DIRECTORY));
         i++;
-        if((FrameTopBuffer+i-frame->workdir->top_index+FrameBotBuffer) > rows) break;
+        if((FrameTopBuffer+i-frame->top_index+FrameBotBuffer) > rows) break;
     }
 }
 

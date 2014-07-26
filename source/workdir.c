@@ -31,7 +31,6 @@ WorkDir_T* workdir_new(char* path){
     mem_retain(wd->path);
     wd->vfiles = vec_new(0);
     workdir_ls(wd);
-    wd->top_index = 0;
     return wd;
 }
 
@@ -48,29 +47,35 @@ void file_free(void* p_vfile){
     mem_release(p_file->path);
 }
 
+void workdir_set_idx(WorkDir_T* wd, int idx){
+	wd->idx = idx;
+	if(idx < 0) wd->idx = 0;
+	if(idx >= vec_size(wd->vfiles)) wd->idx = vec_size(wd->vfiles)-1;
+	state_set_screen_dirty(true);
+}
+
 void workdir_next(WorkDir_T* wd) {
-    //do nothing if at the end of the file list
-    if(wd->idx < vec_size(wd->vfiles)-1){
-        int rows,cols;
-        wd->idx += 1;
-        getmaxyx(stdscr, rows,cols);
-        (void) cols;
-        //scroll if necessary
-        if((FrameTopBuffer+wd->idx+FrameBotBuffer) > rows)
-            wd->top_index = wd->idx-(rows-FrameTopBuffer-FrameBotBuffer);
-    }
-    state_set_screen_dirty(true);
+	workdir_set_idx(wd, wd->idx+1);
 }
 
 void workdir_prev(WorkDir_T* wd) {
-    //do nothing if at the top of the file list
-    if(wd->idx > 0){
-        wd->idx -= 1;
-        //scroll if necessary
-        if(wd->idx < wd->top_index)
-            wd->top_index = wd->idx;
-    }
-    state_set_screen_dirty(true);
+	workdir_set_idx(wd, wd->idx-1);
+}
+
+void workdir_scroll_to_top(WorkDir_T* wd){
+	workdir_set_idx(wd, 0);
+}
+
+void workdir_scroll_to_bot(WorkDir_T* wd){
+	workdir_set_idx(wd, vec_size(wd->vfiles) - 1);
+}
+
+void workdir_jump_up(WorkDir_T* wd){
+	workdir_set_idx(wd, wd->idx - 20);
+}
+
+void workdir_jump_down(WorkDir_T* wd){
+	workdir_set_idx(wd, wd->idx + 20);
 }
 
 void workdir_cd(WorkDir_T* wd) {
@@ -80,7 +85,6 @@ void workdir_cd(WorkDir_T* wd) {
         wd->path = newpath;
         mem_retain(wd->path);
         wd->idx = 0;
-        wd->top_index = 0;
     }
     workdir_ls(wd);
     state_set_screen_dirty(true);
@@ -152,29 +156,8 @@ void workdir_ls(WorkDir_T* wd){
 void workdir_seek(WorkDir_T* wd, char* search){
 	int i = 0;
 	if(strcmp(((File_T*)vec_at(wd->vfiles, 0))->name, "..") == 0) i++;
-	while(i < vec_size(wd->vfiles) && strcmp(search, ((File_T*)vec_at(wd->vfiles, i))->name) < 0) i++;
-	wd->idx = i;
+	while(i < vec_size(wd->vfiles) && strcmp(((File_T*)vec_at(wd->vfiles, i))->name, search) < 0) i++;
+	workdir_set_idx(wd, i);
 }
 
-void workdir_scroll_to_top(WorkDir_T* wd){
-	wd->idx = 0;
-    state_set_screen_dirty(true);
-}
-
-void workdir_scroll_to_bot(WorkDir_T* wd){
-	wd->idx = vec_size(wd->vfiles) - 1;
-    state_set_screen_dirty(true);
-}
-
-void workdir_jump_up(WorkDir_T* wd){
-	wd->idx -= 20;
-	if(wd->idx < 0) wd->idx = 0;
-    state_set_screen_dirty(true);
-}
-
-void workdir_jump_down(WorkDir_T* wd){
-	wd->idx += 20;
-	if(wd->idx >= vec_size(wd->vfiles)) wd->idx = vec_size(wd->vfiles)-1;
-    state_set_screen_dirty(true);
-}
 
