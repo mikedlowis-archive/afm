@@ -130,19 +130,17 @@ void workdir_ls(WorkDir_T* wd){
     wd->vfiles = vec_new(0);
     if(dd) vec_push_back(wd->vfiles, dd);
     while ((read = getline(&filename, &len, ls)) != -1){
-        char* fullpath = mem_allocate((pathlength+read+1)*sizeof(char), NULL);
-        int filename_offset = pathlength;
         File_T* file = mem_allocate(sizeof(File_T), &file_free);
+        file->path = mem_allocate((pathlength+read+1)*sizeof(char), NULL);
+        int filename_offset = pathlength;
         filename[read-1]=0; //remove ending newline
         //build full path:
-        strcpy(fullpath, wd->path);
+        strcpy(file->path, wd->path);
         if (wd->path[pathlength-1] != '/') {
-            strcat(fullpath, "/");
+            strcat(file->path, "/");
             filename_offset += 1;
         }
-        strcat(fullpath, filename);
-        //build file:
-        file->path = fullpath;
+        strcat(file->path, filename);
         file->name = &(file->path[filename_offset]);
         vec_push_back(wd->vfiles, file);
     }
