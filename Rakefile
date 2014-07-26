@@ -20,11 +20,28 @@ end
 # Build Environment
 #------------------------------------------------------------------------------
 Env = Rscons::Environment.new do |env|
+  env.build_dir('source','build/obj/source')
+  env.build_dir('modules','build/obj/modules')
+  env['LIBS'] = ['ncurses']
   env['CPPPATH'] += Dir['modules/data-structures/source/**/']
   #env['CFLAGS'] += ['-Wall']
-  env['CFLAGS'] += ['-Werror', '-pedantic', '--std=gnu99']
-  #env['CFLAGS'] += ['-D_GNU_SOURCE', '-D_XOPEN_SOURCE=700']
-  env['LIBS'] = ['ncurses']
+  env['CFLAGS'] += ['-Werror', '-pedantic', '--std=c99']
+
+  # Platform-specific Defines
+  # -------------------------
+  if RUBY_PLATFORM =~ /linux/
+    env['CFLAGS'] += [
+        '-D_GNU_SOURCE',
+        '-D_XOPEN_SOURCE=700'
+    ]
+  elsif RUBY_PLATFORM =~ /cygwin/
+    # TODO
+  elsif RUBY_PLATFORM =~ /darwin/
+    env['CFLAGS'] += [
+      '-D_DARWIN_C_SOURCE',
+      '-D__DARWIN_C_LEVEL=199506L'
+    ]
+  end
 end
 at_exit { Env.process }
 

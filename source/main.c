@@ -13,14 +13,13 @@
 #include "workdir.h"
 
 void handle_signal(int sig) {
-    //signal(SIGWINCH, handle_signal);
     state_set_screen_dirty(true);
     state_set_screen_resized(true);
 }
 
 int main(int argc, char** argv) {
     /* Handle terminal resizing */
-    //signal(SIGWINCH, handle_signal);
+    signal(SIGWINCH, handle_signal);
     /* Initialize ncurses and user input settings */
     initscr();
     raw();
