@@ -118,6 +118,7 @@ char* ls_command(char* path){
     char* cmd = mem_allocate(sizeof(char) * (4+(strlen(path))), NULL);
     strcpy(cmd, "ls ");
     strcat(cmd, path);
+    return cmd;
 }
 
 void workdir_ls(WorkDir_T* wd){
