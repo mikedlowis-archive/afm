@@ -24,7 +24,7 @@ Env = Rscons::Environment.new do |env|
   env.build_dir('modules','build/obj/modules')
   env['LIBS'] = ['ncurses']
   env['CPPPATH'] += Dir['modules/data-structures/source/**/']
-  #env['CFLAGS'] += ['-Wall']
+  env['CFLAGS'] += ['-Wall']
   env['CFLAGS'] += ['-Werror', '-pedantic', '--std=c99']
 
   # Platform-specific Defines
