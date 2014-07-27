@@ -38,22 +38,26 @@ static void handle_cd(void) {
 static void handle_scroll_to_top(void) {
     workdir_scroll_to_top(state_get_focused_frame()->workdir);
 }
+
 static void handle_scroll_to_bottom(void) {
     workdir_scroll_to_bot(state_get_focused_frame()->workdir);
 }
+
 static void handle_page_up(void){
     screen_frame_page_up(state_get_focused_frame());
 }
+
 static void handle_page_down(void){
     screen_frame_page_down(state_get_focused_frame());
 }
+
 static void handle_expand(void){
     workdir_expand_selected(state_get_focused_frame()->workdir);
 }
+
 static void handle_collapse(void){
     workdir_collapse_selected(state_get_focused_frame()->workdir);
 }
-
 
 static void search_mode(void){
     int searchcap = 8;
@@ -121,14 +125,15 @@ void input_handle_key(char ch) {
     }
 
     /* If we got a valid key then process it */
-    if(ERR != ch) {
+    if((char)ERR != ch) {
+        int i;
         /* Put the key in the buffer */
         len++;
         Key_Buffer[len-1] = ch;
         Key_Buffer[len]   = '\0';
 
         /* Loop over the bindings */
-        for(int i = 0; i < num_entries; i++) {
+        for(i = 0; i < num_entries; i++) {
             binding_t binding = Default_Bindings[i];
             char* seq = binding.sequence;
 
@@ -138,6 +143,7 @@ void input_handle_key(char ch) {
             {
                 more_matches = true;
             }
+
             /* If the current string matches exactly then execute it's handler */
             if (0 == strcmp(Key_Buffer, seq))
             {

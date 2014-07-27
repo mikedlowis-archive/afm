@@ -24,8 +24,7 @@ Env = Rscons::Environment.new do |env|
   env.build_dir('modules','build/obj/modules')
   env['LIBS'] = ['ncurses']
   env['CPPPATH'] += Dir['modules/data-structures/source/**/']
-  env['CFLAGS'] += ['-Wall']
-  env['CFLAGS'] += ['-Werror', '-pedantic', '--std=c99']
+  env['CFLAGS'] += ['-Wall', '-Werror', '-pedantic', '--std=c99']
 
   # Platform-specific Defines
   # -------------------------
@@ -60,5 +59,16 @@ task(:clean) { Rscons.clean }
 
 desc "Remove all generated artifacts and directories as well as any git submodules"
 task :clobber => [:clean] do
-    sh 'git submodule deinit -f .'
+  sh 'git submodule deinit -f .'
+end
+
+task :valgrind => [:build] do
+  sh "valgrind --leak-check=full ./build/afm 2> ./build/valgrind.txt"
+end
+
+task :splint do
+  include_dirs = Dir['source/**/','modules/**/source/**/'].map{|e| "-I#{e}" }
+  sources = Dir['source/**/*.c', 'modules/data-structures/source/**/*.c']
+  cmd = ['splint', '+posixlib'] + include_dirs + sources
+  sh *cmd
 end

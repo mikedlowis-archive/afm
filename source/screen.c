@@ -15,16 +15,15 @@
 #include "aardvark.h"
 #include "workdir.h"
 
-//number of lines to leave before/after dir contents in frame
-static int FrameTopBuffer = 2;
-static int FrameBotBuffer = 2;
-
 static void screen_place_windows(void);
+static void screen_refresh_curr_frame(void);
 static frame_t* screen_frame_new(void);
 static void screen_frame_free(void* p_frame);
 void screen_frame_draw_files(frame_t* frame);
 
 static list_t* Screen_List;
+static int FrameTopBuffer = 2;
+static int FrameBotBuffer = 2;
 
 static frame_t* master_frame(void){
     return (frame_t*) Screen_List->head->contents;
@@ -44,11 +43,11 @@ void screen_update(void) {
     /* Clear screen and update LINES and COLS */
     if(state_get_screen_resized()){
         endwin();
+        screen_place_windows();
         state_set_screen_resized(false);
+    } else {
+        screen_refresh_curr_frame();
     }
-    clear();
-    refresh();
-    screen_place_windows();
     if(state_get_aardvark_mode()) aardvark_draw();
     /* Refresh and mark complete */
     state_set_screen_dirty(false);
@@ -57,6 +56,7 @@ void screen_update(void) {
 void screen_open(void) {
     list_push_back(Screen_List, screen_frame_new());
     state_set_screen_dirty(true);
+    state_set_screen_resized(true);
 }
 
 void screen_close(void) {
@@ -66,6 +66,7 @@ void screen_close(void) {
         state_set_focused_frame(master_frame());
     }
     state_set_screen_dirty(true);
+    state_set_screen_resized(true);
 }
 
 static void screen_place_windows(void) {
@@ -106,6 +107,16 @@ static void screen_place_windows(void) {
         pos += height;
         p_node = p_node->next;
     }
+}
+
+
+static void screen_refresh_curr_frame(void) {
+    /* Print the master frame */
+    frame_t* p_frame = list_at(Screen_List,0)->contents;
+    wclear(p_frame->p_win);
+    screen_frame_draw_files(p_frame);
+    box(p_frame->p_win, 0 , 0);
+    wrefresh(p_frame->p_win);
 }
 
 //get the curent directory and copy it into a ref-counted memory block
@@ -194,6 +205,7 @@ int realrows(frame_t* p_frame){
     (void) cols;
     return rows - FrameTopBuffer - FrameBotBuffer;
 }
+
 void screen_frame_page_up(frame_t* p_frame){
     workdir_set_idx(p_frame->workdir, p_frame->workdir->idx - realrows(p_frame));
 }
