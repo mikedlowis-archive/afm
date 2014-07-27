@@ -15,6 +15,10 @@
 #include "aardvark.h"
 #include "workdir.h"
 
+//number of lines to leave before/after dir contents in frame
+static int FrameTopBuffer = 2;
+static int FrameBotBuffer = 2;
+
 static void screen_place_windows(void);
 static frame_t* screen_frame_new(void);
 static void screen_frame_free(void* p_frame);
@@ -144,6 +148,7 @@ static int count_double_lines(frame_t* p_frame){
 static void screen_frame_scroll(frame_t* p_frame){
     int rows,cols;
     getmaxyx(p_frame->p_win, rows, cols);
+    (void) cols;
     if(p_frame->workdir->idx < p_frame->top_index){
         p_frame->top_index = p_frame->workdir->idx;
     }else{
@@ -156,7 +161,6 @@ static void screen_frame_scroll(frame_t* p_frame){
 void screen_frame_draw_files(frame_t* frame){
     int file_i, frame_i = FrameTopBuffer;
     int rows, cols;
-    int pathlength = strlen(frame->workdir->path);
     getmaxyx(frame->p_win, rows, cols);
     screen_frame_scroll(frame);
     file_i = frame->top_index;
@@ -187,6 +191,7 @@ void screen_frame_draw_files(frame_t* frame){
 int realrows(frame_t* p_frame){
     int rows, cols;
     getmaxyx(p_frame->p_win, rows, cols);
+    (void) cols;
     return rows - FrameTopBuffer - FrameBotBuffer;
 }
 void screen_frame_page_up(frame_t* p_frame){

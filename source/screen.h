@@ -16,10 +16,6 @@ void screen_update(void);
 void screen_open(void);
 void screen_close(void);
 
-//number of lines to leave before/after dir contents in frame
-static int FrameTopBuffer = 2;
-static int FrameBotBuffer = 2;
-
 typedef struct {
     WINDOW* p_win;
     WorkDir_T* workdir;
