@@ -1,9 +1,11 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include "input.h"
 #include "state.h"
 #include "workdir.h"
 #include "screen.h"
-#include <stdlib.h>
-#include <string.h>
+#include "frame.h"
 
 #define ESC 27
 
@@ -24,39 +26,39 @@ static void handle_quit(void) {
 }
 
 static void handle_next(void) {
-    workdir_next(state_get_focused_frame()->workdir);
+    workdir_next(state_get_focused_workdir());
 }
 
 static void handle_prev(void) {
-    workdir_prev(state_get_focused_frame()->workdir);
+    workdir_prev(state_get_focused_workdir());
 }
 
 static void handle_cd(void) {
-    workdir_cd(state_get_focused_frame()->workdir);
+    workdir_cd(state_get_focused_workdir());
 }
 
 static void handle_scroll_to_top(void) {
-    workdir_scroll_to_top(state_get_focused_frame()->workdir);
+    workdir_scroll_to_top(state_get_focused_workdir());
 }
 
 static void handle_scroll_to_bottom(void) {
-    workdir_scroll_to_bot(state_get_focused_frame()->workdir);
+    workdir_scroll_to_bot(state_get_focused_workdir());
 }
 
 static void handle_page_up(void){
-    screen_frame_page_up(state_get_focused_frame());
+    frame_page_up(state_get_focused_frame());
 }
 
 static void handle_page_down(void){
-    screen_frame_page_down(state_get_focused_frame());
+    frame_page_down(state_get_focused_frame());
 }
 
 static void handle_expand(void){
-    workdir_expand_selected(state_get_focused_frame()->workdir);
+    workdir_expand_selected(state_get_focused_workdir());
 }
 
 static void handle_collapse(void){
-    workdir_collapse_selected(state_get_focused_frame()->workdir);
+    workdir_collapse_selected(state_get_focused_workdir());
 }
 
 static void search_mode(void){
@@ -81,7 +83,7 @@ static void search_mode(void){
             searchstr[searchlen] = inpt;
             searchlen += 1;
             searchstr[searchlen] = 0;
-            workdir_seek(state_get_focused_frame()->workdir, searchstr);
+            workdir_seek(state_get_focused_workdir(), searchstr);
         }
         if(state_get_screen_dirty()) screen_update();
     }

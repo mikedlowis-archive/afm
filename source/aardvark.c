@@ -1,6 +1,7 @@
-#include "aardvark.h"
 #include <stdint.h>
 #include <ncurses.h>
+
+#include "aardvark.h"
 
 typedef struct {
     uint8_t a, b, c;

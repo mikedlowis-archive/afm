@@ -6,11 +6,9 @@
 #include <unistd.h> /*TODO: anything using this is almost certainly broken on windows */
 #include <string.h>
 
-#include "aardvark.h"
 #include "state.h"
 #include "input.h"
 #include "screen.h"
-#include "workdir.h"
 
 void handle_signal(int sig) {
     state_set_screen_dirty(true);

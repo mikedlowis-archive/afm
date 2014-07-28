@@ -8,7 +8,9 @@
 #define STATE_H
 
 #include <stdbool.h>
-#include "screen.h"
+#include "frame.h"
+#include "workdir.h"
+
 
 typedef enum{ MODE_NORMAL, MODE_SEARCH } Mode_T;
 
@@ -20,8 +22,9 @@ bool state_get_screen_resized(void);
 void state_set_screen_resized(bool val);
 bool state_get_aardvark_mode(void);
 void state_set_aardvark_mode(bool val);
-frame_t* state_get_focused_frame(void);
-void state_set_focused_frame(frame_t* p_frame);
+Frame_T* state_get_focused_frame(void);
+WorkDir_T* state_get_focused_workdir(void);
+void state_set_focused_frame(Frame_T* p_frame);
 Mode_T state_get_mode(void);
 void state_set_mode(Mode_T);
 

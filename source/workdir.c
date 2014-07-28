@@ -11,9 +11,8 @@
 #include "mem.h"
 
 /* internal headers */
-#include "state.h"
 #include "workdir.h"
-#include "screen.h"
+#include "state.h"
 
 bool is_dir(char* path) {
     struct stat s;
