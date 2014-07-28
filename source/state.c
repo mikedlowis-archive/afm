@@ -69,6 +69,7 @@ WorkDir_T* state_get_focused_workdir(void) {
 }
 
 void state_set_focused_node(list_node_t *p_node) {
+	frame_set_highlighting(state_get_focused_frame(), false, true);
     Focused_Node = p_node;
 }
 
