@@ -63,9 +63,9 @@ void screen_close(void) {
     if (Frame_List->head != Frame_List->tail) {
         int i = get_focused_frame_index();
         if(i >= 0){ /* negative if node not found */
-			list_node_t* doomed_node = state_get_focused_node();
-			mem_retain(doomed_node);
-			list_node_t* new_focus = doomed_node->next;
+            list_node_t* doomed_node = state_get_focused_node();
+            mem_retain(doomed_node);
+            list_node_t* new_focus = doomed_node->next;
             /* TODO: add function to list that allows removing with node pointer instead of just index */
             list_delete(Frame_List, i);
             // new_focus will be null if rm-d tail: set it to new tail
@@ -128,16 +128,14 @@ static void screen_refresh_curr_frame(void) {
 
 void screen_focus_next(void){
     list_node_t* focused = state_get_focused_node();
-    if(focused->next != NULL){
-        state_set_focused_node(focused->next);
-        state_set_screen_dirty(true);
-    }
+    state_set_focused_node(focused->next ? focused->next : Frame_List->head);
+    state_set_screen_dirty(true);
 }
 
 void screen_focus_prev(void){
     int i = get_focused_frame_index();
-    if(i > 0){
-        list_node_t* prev = list_at(Frame_List, i-1);
+    if(i >= 0){
+        list_node_t* prev = (i == 0) ? Frame_List->tail : list_at(Frame_List, i-1);
         if(prev) state_set_focused_node(prev);
         state_set_screen_dirty(true);
     }
