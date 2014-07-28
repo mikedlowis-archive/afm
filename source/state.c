@@ -1,3 +1,4 @@
+/* TODO: fix list.h */
 #include <stddef.h> // needed because of a bug in list.h: size_t undefined.
 #include "list.h"
 

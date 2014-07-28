@@ -50,6 +50,7 @@ void screen_open(void) {
     state_set_screen_resized(true);
 }
 
+/* TODO: add equiv. function to list */
 static int get_focused_frame_index(void){
     int i = 0;
     list_node_t* n = Frame_List->head;
@@ -63,6 +64,7 @@ void screen_close(void) {
         int i = get_focused_frame_index();
         list_node_t* new_focus = state_get_focused_node()->next;
         if(i >= 0){ /* negative if node not found */
+            /* TODO: add function to list that allows removing with node pointer instead of just index */
             list_delete(Frame_List, i);
             // new_focus will be null if rm-d tail: set it to new tail
             if(new_focus == NULL) new_focus = Frame_List->tail;
@@ -122,24 +124,24 @@ static void screen_refresh_curr_frame(void) {
 }
 
 void screen_focus_next(void){
-	list_node_t* focused = state_get_focused_node();
-	if(focused->next != NULL){
-		state_set_focused_node(focused->next);
-		state_set_screen_dirty(true);
-	}
+    list_node_t* focused = state_get_focused_node();
+    if(focused->next != NULL){
+        state_set_focused_node(focused->next);
+        state_set_screen_dirty(true);
+    }
 }
 
 void screen_focus_prev(void){
-	int i = get_focused_frame_index();
-	if(i > 0){
-		list_node_t* prev = list_at(Frame_List, i-1);
-		if(prev) state_set_focused_node(prev);
-		state_set_screen_dirty(true);
-	}
+    int i = get_focused_frame_index();
+    if(i > 0){
+        list_node_t* prev = list_at(Frame_List, i-1);
+        if(prev) state_set_focused_node(prev);
+        state_set_screen_dirty(true);
+    }
 }
 
 void screen_focus_master(void){
-	state_set_focused_node(Frame_List->head);
-	state_set_screen_dirty(true);
+    state_set_focused_node(Frame_List->head);
+    state_set_screen_dirty(true);
 }
 
