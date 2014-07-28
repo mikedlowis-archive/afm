@@ -47,24 +47,30 @@ static void frame_free(void* p_frame_ptr) {
     if(p_frame->workdir) mem_release(p_frame->workdir);
 }
 
-static int count_double_lines(Frame_T* p_frame){
+static int count_double_lines_to_idx(Frame_T* p_frame, bool inclusive){
     int count = 0;
-    for(int i = p_frame->top_index; i <= p_frame->workdir->idx; i++)
+    int target = p_frame->workdir->idx + (inclusive ? 1 : 0);
+    for(int i = p_frame->top_index; i < target; i++)
         if (((File_T*)vec_at(p_frame->workdir->vfiles, i))->expanded) count++;
     return count;
 }
 
-static void frame_scroll(Frame_T* p_frame){
+static bool frame_scroll(Frame_T* p_frame){
     int rows,cols;
+    bool changed = false;
     getmaxyx(p_frame->p_win, rows, cols);
     (void) cols;
     if(p_frame->workdir->idx < p_frame->top_index){
         p_frame->top_index = p_frame->workdir->idx;
+        changed = true;
     }else{
-        int doublelines = count_double_lines(p_frame);
-        if (p_frame->top_index < doublelines+p_frame->workdir->idx-(rows-FrameTopBuffer-FrameBotBuffer))
+        int doublelines = count_double_lines_to_idx(p_frame, true);
+        if (p_frame->top_index < doublelines+p_frame->workdir->idx-(rows-FrameTopBuffer-FrameBotBuffer)){
             p_frame->top_index = doublelines+p_frame->workdir->idx-(rows-FrameTopBuffer-FrameBotBuffer);
+			changed = true;
+        }
     }
+    return changed;
 }
 
 int realrows(Frame_T* p_frame){
@@ -115,12 +121,13 @@ void frame_draw_files(Frame_T* frame){
 
 void frame_set_highlighting(Frame_T* frame, bool highlight, bool refresh_win){
 	if(frame){
-		int line = FrameTopBuffer + frame->workdir->idx - frame->top_index;
+		int line = FrameTopBuffer + count_double_lines_to_idx(frame, false) + frame->workdir->idx - frame->top_index;
 		attr_t newattr= highlight ? (A_STANDOUT|A_BOLD) : A_NORMAL;
 		File_T* file = (File_T*) vec_at(frame->workdir->vfiles, frame->workdir->idx);
 		short color = (is_dir(file->path) ? DIRECTORY : 0);
 		mvwchgat(frame->p_win, line, 0, -1, newattr, color, NULL);
 		if(file->expanded) mvwchgat(frame->p_win, line+1, color, -1, newattr, 0, NULL);
+		if(frame_scroll(frame)) state_set_screen_dirty(true);
 		if(refresh_win) wrefresh(frame->p_win);
 	}
 }

@@ -53,11 +53,12 @@ void file_free(void* p_vfile){
 }
 
 void workdir_set_idx(WorkDir_T* wd, int idx){
+	frame_set_highlighting(state_get_focused_frame(), false, false);
     wd->idx = idx;
     if(idx < 0) wd->idx = 0;
     else if(idx >= vec_size(wd->vfiles))
         wd->idx = vec_size(wd->vfiles)-1;
-    state_set_screen_dirty(true);
+	frame_set_highlighting(state_get_focused_frame(), true, true);
 }
 
 void workdir_next(WorkDir_T* wd) {
