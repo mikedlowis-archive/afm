@@ -9,7 +9,6 @@
 #include "state.h"
 #include "input.h"
 #include "screen.h"
-#include "aardvark.h"
 
 void handle_signal(int sig) {
     state_set_screen_dirty(true);
@@ -17,7 +16,7 @@ void handle_signal(int sig) {
 }
 
 void handle_alarm(int sig) {
-	aardvark_draw();
+	state_set_screen_dirty(true);
 	alarm(1);
 }
 
