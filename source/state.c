@@ -1,5 +1,6 @@
 /* TODO: fix list.h */
 #include <stddef.h> // needed because of a bug in list.h: size_t undefined.
+#include <unistd.h>
 #include "list.h"
 
 #include "frame.h"
@@ -52,6 +53,7 @@ bool state_get_aardvark_mode(void) {
 }
 
 void state_set_aardvark_mode(bool val) {
+	alarm(val ? 1 : 0);
     AardvarkOn = val;
 }
 

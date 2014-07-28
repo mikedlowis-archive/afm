@@ -25,14 +25,18 @@ static Triplet_T aadata[77] = {
     { 26, 18,  8 }, { 26, 27, 15 }, { 26, 49,  7 }, { 27, 26,  6 }
 };
 
+static int c = 0;
 void aardvark_draw(void) {
     int row, col;
     int i;
     int trips=sizeof(aadata)/sizeof(Triplet_T);
     char* aardvark="############################################################";
     getmaxyx(stdscr, row, col);
+    attron(COLOR_PAIR(c));
     for(i=0; i<trips; i++)
         mvaddnstr(((row-28)/2)+aadata[i].a, (col-70)/2+aadata[i].b, aardvark, aadata[i].c);
+    attroff(COLOR_PAIR(c));
     refresh();
+    c = ((c+1)%7);
 }
 
