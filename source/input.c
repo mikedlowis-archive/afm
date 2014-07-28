@@ -106,8 +106,9 @@ static binding_t Default_Bindings[] = {
     { "D",  &handle_page_down },
     { "l",  &handle_expand },
     { "h",  &handle_collapse },
-    //{ "wj", NULL },
-    //{ "wk", NULL },
+    { "wj", &screen_focus_next },
+    { "wk", &screen_focus_prev },
+    { "w\n", &screen_focus_master }
 };
 
 static char Key_Buffer[16] = {0};

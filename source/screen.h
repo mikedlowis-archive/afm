@@ -12,6 +12,9 @@ void screen_deinit(void);
 void screen_update(void);
 void screen_open(void);
 void screen_close(void);
+void screen_focus_next(void);
+void screen_focus_prev(void);
+void screen_focus_master(void);
 
 
 #endif /* SCREEN_H */

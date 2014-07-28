@@ -114,11 +114,32 @@ static void screen_place_windows(void) {
 }
 
 static void screen_refresh_curr_frame(void) {
-    /* Print the master frame */
-    Frame_T* p_frame = list_at(Frame_List,0)->contents;
+    Frame_T* p_frame = state_get_focused_frame();
     wclear(p_frame->p_win);
     frame_draw_files(p_frame);
     box(p_frame->p_win, 0 , 0);
     wrefresh(p_frame->p_win);
+}
+
+void screen_focus_next(void){
+	list_node_t* focused = state_get_focused_node();
+	if(focused->next != NULL){
+		state_set_focused_node(focused->next);
+		state_set_screen_dirty(true);
+	}
+}
+
+void screen_focus_prev(void){
+	int i = get_focused_frame_index();
+	if(i > 0){
+		list_node_t* prev = list_at(Frame_List, i-1);
+		if(prev) state_set_focused_node(prev);
+		state_set_screen_dirty(true);
+	}
+}
+
+void screen_focus_master(void){
+	state_set_focused_node(Frame_List->head);
+	state_set_screen_dirty(true);
 }
 
