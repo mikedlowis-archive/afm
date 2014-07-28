@@ -62,8 +62,10 @@ static int get_focused_frame_index(void){
 void screen_close(void) {
     if (Frame_List->head != Frame_List->tail) {
         int i = get_focused_frame_index();
-        list_node_t* new_focus = state_get_focused_node()->next;
         if(i >= 0){ /* negative if node not found */
+			list_node_t* doomed_node = state_get_focused_node();
+			mem_retain(doomed_node);
+			list_node_t* new_focus = doomed_node->next;
             /* TODO: add function to list that allows removing with node pointer instead of just index */
             list_delete(Frame_List, i);
             // new_focus will be null if rm-d tail: set it to new tail
@@ -71,6 +73,7 @@ void screen_close(void) {
             state_set_focused_node(new_focus);
             state_set_screen_dirty(true);
             state_set_screen_resized(true);
+            mem_release(doomed_node);
         }
     }
 }

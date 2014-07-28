@@ -102,9 +102,6 @@ void frame_draw_files(Frame_T* frame){
     while (file_i < vec_size(frame->workdir->vfiles)){
         File_T* file = (File_T*)vec_at(frame->workdir->vfiles, file_i);
         bool dir = is_dir(file->path);
-        if(frame == state_get_focused_frame() && file_i == frame->workdir->idx){
-            wattron(frame->p_win, A_STANDOUT | A_BOLD);
-        }
         if(dir) wattron(frame->p_win, COLOR_PAIR(DIRECTORY));
         mvwaddnstr(frame->p_win, frame_i, 1, file->name, cols-2);
         frame_i++;
@@ -116,6 +113,7 @@ void frame_draw_files(Frame_T* frame){
         file_i++;
         if((frame_i+FrameBotBuffer) > rows) break;
     }
+    if(frame == state_get_focused_frame()) frame_set_highlighting(frame, true, false);
 }
 
 
@@ -124,9 +122,9 @@ void frame_set_highlighting(Frame_T* frame, bool highlight, bool refresh_win){
 		int line = FrameTopBuffer + count_double_lines_to_idx(frame, false) + frame->workdir->idx - frame->top_index;
 		attr_t newattr= highlight ? (A_STANDOUT|A_BOLD) : A_NORMAL;
 		File_T* file = (File_T*) vec_at(frame->workdir->vfiles, frame->workdir->idx);
-		short color = (is_dir(file->path) ? DIRECTORY : 0);
+		short color = (file && is_dir(file->path) ? DIRECTORY : 0);
 		mvwchgat(frame->p_win, line, 0, -1, newattr, color, NULL);
-		if(file->expanded) mvwchgat(frame->p_win, line+1, color, -1, newattr, 0, NULL);
+		if(file && file->expanded) mvwchgat(frame->p_win, line+1, color, -1, newattr, 0, NULL);
 		if(frame_scroll(frame)) state_set_screen_dirty(true);
 		if(refresh_win) wrefresh(frame->p_win);
 	}
