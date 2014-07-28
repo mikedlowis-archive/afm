@@ -20,14 +20,10 @@ static void screen_refresh_curr_frame(void);
 
 static list_t* Frame_List;
 
-static Frame_T* master_frame(void){
-    return (Frame_T*) Frame_List->head->contents;
-}
-
 void screen_init(void) {
     Frame_List = list_new();
     list_push_back(Frame_List, frame_new());
-    state_set_focused_frame(master_frame());
+    state_set_focused_node(Frame_List->head);
 }
 
 void screen_deinit(void) {
@@ -54,14 +50,27 @@ void screen_open(void) {
     state_set_screen_resized(true);
 }
 
+static int get_focused_frame_index(void){
+    int i = 0;
+    list_node_t* n = Frame_List->head;
+    while(n != state_get_focused_node() && n != Frame_List->tail){ n = n->next; i++; }
+    if(n != state_get_focused_node()) i = -1;
+    return i;
+}
+
 void screen_close(void) {
-    int num_frames = list_size(Frame_List);
-    if(num_frames > 1){
-        list_delete(Frame_List, 0);
-        state_set_focused_frame(master_frame());
+    if (Frame_List->head != Frame_List->tail) {
+        int i = get_focused_frame_index();
+        list_node_t* new_focus = state_get_focused_node()->next;
+        if(i >= 0){ /* negative if node not found */
+            list_delete(Frame_List, i);
+            // new_focus will be null if rm-d tail: set it to new tail
+            if(new_focus == NULL) new_focus = Frame_List->tail;
+            state_set_focused_node(new_focus);
+            state_set_screen_dirty(true);
+            state_set_screen_resized(true);
+        }
     }
-    state_set_screen_dirty(true);
-    state_set_screen_resized(true);
 }
 
 static void screen_place_windows(void) {

@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <stdlib.h>
-#include <unistd.h> /*TODO: anything using this is almost certainly broken on windows */
 #include <string.h>
 
 #include "state.h"
