@@ -22,19 +22,21 @@ end
 Env = Rscons::Environment.new do |env|
   env.build_dir('source','build/obj/source')
   env.build_dir('modules','build/obj/modules')
-  env['LIBS'] = ['ncurses']
+  env['LIBS'] = ['ncurses', 'cds']
+  env['LIBPATH'] += ['./build']
   env['CPPPATH'] += Dir['modules/data-structures/source/**/']
   env['CFLAGS'] += ['-Wall', '-Werror', '-pedantic', '--std=c99']
 
-  # Platform-specific Defines
-  # -------------------------
+  # Platform-Specific Defines and Options
+  # -------------------------------------
   if RUBY_PLATFORM =~ /linux/
     env['CFLAGS'] += [
         '-D_GNU_SOURCE',
         '-D_XOPEN_SOURCE=700'
     ]
-  elsif RUBY_PLATFORM =~ /cygwin/
-    # TODO
+  elsif RUBY_PLATFORM =~ /mingw/
+    env['CFLAGS'] -= ['--std=c99']
+    env['CFLAGS'] += ['--std=gnu99']
   elsif RUBY_PLATFORM =~ /darwin/
     env['CFLAGS'] += [
       '-D_DARWIN_C_SOURCE',
@@ -50,8 +52,13 @@ at_exit { Env.process }
 task :default => [:build]
 
 desc "Build the AFM release binary"
-task :build => ['modules/data-structures/source'] do
-  Env.Program('build/afm', Dir['source/**/*.c', 'modules/data-structures/source/**/*.c'])
+task :build => ['modules/data-structures/source', :libcds] do
+  Env.Program('build/afm', Dir['source/**/*.c'])
+end
+
+desc "Build the CDS static library"
+task :libcds do
+  Env.Library('build/libcds.a', Dir['modules/data-structures/source/**/*.c'])
 end
 
 desc "Remove all generate artifacts and directories"
