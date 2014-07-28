@@ -11,16 +11,18 @@
 #include "screen.h"
 
 void handle_signal(int sig) {
+	(void) sig;
     state_set_screen_dirty(true);
     state_set_screen_resized(true);
 }
 
 void handle_alarm(int sig) {
+	(void) sig;
 	state_set_screen_dirty(true);
 	alarm(1);
 }
 
-int main(int argc, char** argv) {
+int main() {
     /* Handle terminal resizing */
     signal(SIGWINCH, handle_signal);
     signal(SIGALRM, handle_alarm);

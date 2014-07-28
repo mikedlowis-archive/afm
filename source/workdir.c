@@ -56,7 +56,7 @@ void workdir_set_idx(WorkDir_T* wd, int idx){
 	frame_set_highlighting(state_get_focused_frame(), false, false);
     wd->idx = idx;
     if(idx < 0) wd->idx = 0;
-    else if(idx >= vec_size(wd->vfiles))
+    else if((unsigned int)idx >= vec_size(wd->vfiles))
         wd->idx = vec_size(wd->vfiles)-1;
 	frame_set_highlighting(state_get_focused_frame(), true, true);
 }
@@ -157,7 +157,7 @@ void workdir_ls(WorkDir_T* wd){
 }
 
 void workdir_seek(WorkDir_T* wd, char* search){
-    int i = 0;
+    unsigned int i = 0;
     if(strcmp(((File_T*)vec_at(wd->vfiles, 0))->name, "..") == 0) i++;
     while(i < vec_size(wd->vfiles) && strcmp(((File_T*)vec_at(wd->vfiles, i))->name, search) < 0) i++;
     workdir_set_idx(wd, i);
