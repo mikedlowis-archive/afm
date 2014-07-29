@@ -160,10 +160,11 @@ void screen_swap_with_master(void){
 	list_node_t* tmp = master->next;
 	if(prev){ //if prev is null, implies focus is already master & should do nothing
 		//put master in list
-		prev->next = master;
+		if(prev!=master) prev->next = master;
 		master->next = focused->next;
 		//make focused new heaad
-		focused->next = tmp;
+		if(focused != tmp) focused->next = tmp;
+		else focused->next = master;
 		Frame_List->head = focused;
 		screen_force_redraw();
 	}
