@@ -25,9 +25,7 @@ Env = Rscons::Environment.new do |env|
   env['LIBS'] = ['ncurses', 'cds']
   env['LIBPATH'] += ['./build']
   env['CPPPATH'] += Dir['modules/data-structures/source/**/']
-  env['CFLAGS'] += ['-Wall', '-Wextra',
-    #'-Werror', #commented out until mike fixes his shit.
-    '-pedantic', '--std=c99']
+  env['CFLAGS'] += ['-Wall', '-Wextra', '-Werror', '-pedantic', '--std=c99']
 
   # Platform-Specific Defines and Options
   # -------------------------------------
