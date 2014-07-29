@@ -89,8 +89,8 @@ void frame_page_down(Frame_T* p_frame){
 }
 
 void frame_draw_files(Frame_T* frame){
-    int file_i, frame_i = FrameTopBuffer;
-    int rows, cols;
+    unsigned int file_i, frame_i = FrameTopBuffer;
+    unsigned int rows, cols;
     getmaxyx(frame->p_win, rows, cols);
     frame_scroll(frame);
     file_i = frame->top_index;
