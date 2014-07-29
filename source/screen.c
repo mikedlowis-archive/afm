@@ -146,3 +146,31 @@ void screen_focus_master(void){
     state_set_screen_dirty(true);
 }
 
+//TODO: this should be a function in list.h
+list_node_t* find_prev_node(list_node_t* node){
+	list_node_t* prev = (Frame_List->head == node) ? NULL : Frame_List->head;
+	while(prev && prev->next != node) prev=prev->next;
+	return prev;
+}
+
+void screen_swap_with_master(void){
+	list_node_t* focused = state_get_focused_node();
+	list_node_t* master = Frame_List->head;
+	list_node_t* prev = find_prev_node(focused);
+	list_node_t* tmp = master->next;
+	if(prev){ //if prev is null, implies focus is already master & should do nothing
+		//put master in list
+		prev->next = master;
+		master->next = focused->next;
+		//make focused new heaad
+		focused->next = tmp;
+		Frame_List->head = focused;
+		screen_force_redraw();
+	}
+}
+
+void screen_force_redraw(void){
+	state_set_screen_dirty(true);
+	state_set_screen_resized(true);
+}
+

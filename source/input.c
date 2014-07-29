@@ -108,7 +108,9 @@ static binding_t Default_Bindings[] = {
     { "h",  &handle_collapse },
     { "wj", &screen_focus_next },
     { "wk", &screen_focus_prev },
-    { "w\n", &screen_focus_master }
+    { "wm", &screen_focus_master },
+    { "w\n", &screen_swap_with_master },
+    { "R",  &screen_force_redraw }
 };
 
 static char Key_Buffer[16] = {0};
