@@ -132,25 +132,31 @@ void screen_focus_next(void){
     state_set_screen_dirty(true);
 }
 
+//TODO: this should be a function in list.h
+list_node_t* find_prev_node(list_node_t* node){
+	list_node_t* prev = (Frame_List->head == node) ? NULL : Frame_List->head;
+	while(prev && prev->next != node) prev=prev->next;
+	return prev;
+}
+
 void screen_focus_prev(void){
+	list_node_t* prev = find_prev_node(state_get_focused_node());
+	if(!prev) prev = Frame_List->tail;
+	state_set_focused_node(prev);
+	state_set_screen_dirty(true);
+	/*
     int i = get_focused_frame_index();
     if(i >= 0){
         list_node_t* prev = (i == 0) ? Frame_List->tail : list_at(Frame_List, i-1);
         if(prev) state_set_focused_node(prev);
         state_set_screen_dirty(true);
     }
+    */
 }
 
 void screen_focus_master(void){
     state_set_focused_node(Frame_List->head);
     state_set_screen_dirty(true);
-}
-
-//TODO: this should be a function in list.h
-list_node_t* find_prev_node(list_node_t* node){
-	list_node_t* prev = (Frame_List->head == node) ? NULL : Frame_List->head;
-	while(prev && prev->next != node) prev=prev->next;
-	return prev;
 }
 
 void screen_swap_with_master(void){
