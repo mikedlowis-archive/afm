@@ -119,12 +119,16 @@ void frame_draw_files(Frame_T* frame){
 
 void frame_set_highlighting(Frame_T* frame, bool highlight, bool refresh_win){
 	if(frame){
+		int rows,cols;
 		int line = FrameTopBuffer + count_double_lines_to_idx(frame, false) + frame->workdir->idx - frame->top_index;
 		attr_t newattr= highlight ? (A_STANDOUT|A_BOLD) : A_NORMAL;
 		File_T* file = (File_T*) vec_at(frame->workdir->vfiles, frame->workdir->idx);
 		short color = (file && is_dir(file->path) ? DIRECTORY : 0);
-		mvwchgat(frame->p_win, line, 0, -1, newattr, color, NULL);
-		if(file && file->expanded) mvwchgat(frame->p_win, line+1, color, -1, newattr, 0, NULL);
+		getmaxyx(frame->p_win, rows, cols);
+		(void) rows;
+		mvwchgat(frame->p_win, line, 1, cols-2, newattr, color, NULL);
+		if(file && file->expanded) mvwchgat(frame->p_win, line+1, 1, cols-2, newattr, color, NULL);
+		wmove(frame->p_win, 0, 0); //move the cursor out of the way
 		if(frame_scroll(frame)) state_set_screen_dirty(true);
 		if(refresh_win) wrefresh(frame->p_win);
 	}
