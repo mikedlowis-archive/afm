@@ -18,7 +18,7 @@ typedef struct {
 
 static void handle_aardvark(void) {
     state_set_aardvark_mode(!state_get_aardvark_mode());
-    state_set_screen_dirty(true);
+    state_set_refresh_state(REFRESH_ALL_WINS);
 }
 
 static void handle_quit(void) {
@@ -85,7 +85,7 @@ static void search_mode(void){
             searchstr[searchlen] = 0;
             workdir_seek(state_get_focused_workdir(), searchstr);
         }
-        if(state_get_screen_dirty()) screen_update();
+        if(state_get_refresh_state() != REFRESH_COMPLETE) screen_update();
     }
     free(searchstr);
     state_set_mode(MODE_NORMAL);
