@@ -21,33 +21,51 @@ static void screen_refresh_curr_frame(void);
 static list_t* Frame_List;
 
 void screen_init(void) {
+    /* Initialize ncurses */
+    initscr();
+    start_color();
+    init_pair(DIRECTORY, COLOR_BLUE, COLOR_BLACK);
+    init_pair(2, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(3, COLOR_RED, COLOR_BLACK);
+    init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(5, COLOR_GREEN, COLOR_BLACK);
+    init_pair(6, COLOR_CYAN, COLOR_BLACK);
+    raw();
+    keypad(stdscr, TRUE);
+    noecho();
+    timeout(25);
+    refresh();
+    /* Initialize the frame list */
     Frame_List = list_new();
     list_push_back(Frame_List, frame_new());
     state_set_focused_node(Frame_List->head);
 }
 
 void screen_deinit(void) {
+    /* dump the frame list */
     mem_release(Frame_List);
+    /* tear down ncurses */
+    clear();
+    refresh();
+    endwin();
 }
 
 void screen_update(void) {
     /* Clear screen and update LINES and COLS */
-    if(state_get_screen_resized()){
+    if(state_get_refresh_state() == REFRESH_ALL_WINS){
         endwin();
         screen_place_windows();
-        state_set_screen_resized(false);
     } else {
         screen_refresh_curr_frame();
     }
     if(state_get_aardvark_mode()) aardvark_draw();
     /* Refresh and mark complete */
-    state_set_screen_dirty(false);
+    state_set_refresh_state(REFRESH_COMPLETE);
 }
 
 void screen_open(void) {
     list_push_back(Frame_List, frame_new());
-    state_set_screen_dirty(true);
-    state_set_screen_resized(true);
+    state_set_refresh_state(REFRESH_ALL_WINS);
 }
 
 /* TODO: add equiv. function to list */
@@ -71,8 +89,7 @@ void screen_close(void) {
             // new_focus will be null if rm-d tail: set it to new tail
             if(new_focus == NULL) new_focus = Frame_List->tail;
             state_set_focused_node(new_focus);
-            state_set_screen_dirty(true);
-            state_set_screen_resized(true);
+            state_set_refresh_state(REFRESH_ALL_WINS);
             mem_release(doomed_node);
         }
     }
@@ -87,12 +104,9 @@ static void screen_place_windows(void) {
 
     /* Print the master frame */
     p_frame = list_at(Frame_List,0)->contents;
-    mvwin(p_frame->p_win, 0, 0);
-    wresize(p_frame->p_win, lines, (num_frames > 1) ? cols/2 : cols);
-    wclear(p_frame->p_win);
-    frame_draw_files(p_frame);
-    box(p_frame->p_win, 0 , 0);
-    wrefresh(p_frame->p_win);
+    frame_move(p_frame, 0, 0);
+    frame_resize(p_frame, lines, (num_frames > 1) ? cols/2 : cols);
+    frame_draw(p_frame);
 
     /* Print any other frames we might have */
     p_node = list_at(Frame_List,1);
@@ -104,13 +118,9 @@ static void screen_place_windows(void) {
         int height = (lines / (num_frames-1)) + (id <= remain ? 1 : 0);
         p_frame = p_node->contents;
         /* Place the frame */
-        mvwin(p_frame->p_win, pos, cols/2);
-        wresize(p_frame->p_win, height, cols/2);
-        wclear(p_frame->p_win);
-        frame_draw_files(p_frame);
-        wmove(p_frame->p_win, 1, 1);
-        box(p_frame->p_win, 0 , 0);
-        wrefresh(p_frame->p_win);
+        frame_move(p_frame, pos, cols/2);
+        frame_resize(p_frame, height, cols/2);
+        frame_draw(p_frame);
         /* Get the next one */
         id++;
         pos += height;
@@ -120,16 +130,13 @@ static void screen_place_windows(void) {
 
 static void screen_refresh_curr_frame(void) {
     Frame_T* p_frame = state_get_focused_frame();
-    wclear(p_frame->p_win);
-    frame_draw_files(p_frame);
-    box(p_frame->p_win, 0 , 0);
-    wrefresh(p_frame->p_win);
+    frame_draw(p_frame);
 }
 
 void screen_focus_next(void){
     list_node_t* focused = state_get_focused_node();
     state_set_focused_node(focused->next ? focused->next : Frame_List->head);
-    state_set_screen_dirty(true);
+    state_set_refresh_state(REFRESH_CURR_WIN);
 }
 
 void screen_focus_prev(void){
@@ -137,12 +144,12 @@ void screen_focus_prev(void){
     if(i >= 0){
         list_node_t* prev = (i == 0) ? Frame_List->tail : list_at(Frame_List, i-1);
         if(prev) state_set_focused_node(prev);
-        state_set_screen_dirty(true);
+        state_set_refresh_state(REFRESH_CURR_WIN);
     }
 }
 
 void screen_focus_master(void){
     state_set_focused_node(Frame_List->head);
-    state_set_screen_dirty(true);
+    state_set_refresh_state(REFRESH_CURR_WIN);
 }
 
