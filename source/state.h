@@ -30,6 +30,7 @@ typedef enum {
     REFRESH_COMPLETE,
     REFRESH_CURR_WIN,
     REFRESH_ALL_WINS,
+    REFRESH_AARDVARK,
 } RefreshState_T;
 
 RefreshState_T state_get_refresh_state(void);

@@ -11,7 +11,7 @@ void handle_signal(int sig) {
 
 void handle_alarm(int sig) {
     (void) sig;
-    state_set_refresh_state(REFRESH_CURR_WIN);
+    state_set_refresh_state(REFRESH_AARDVARK);
     alarm(1);
 }
 

@@ -18,7 +18,7 @@ typedef struct {
 
 static void handle_aardvark(void) {
     state_set_aardvark_mode(!state_get_aardvark_mode());
-    state_set_refresh_state(REFRESH_ALL_WINS);
+    state_set_refresh_state(REFRESH_AARDVARK);
 }
 
 static void handle_quit(void) {

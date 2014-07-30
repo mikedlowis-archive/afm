@@ -63,10 +63,11 @@ void screen_update(void) {
     if(state_get_refresh_state() == REFRESH_ALL_WINS){
         endwin();
         screen_place_windows();
+    } else if (state_get_refresh_state() == REFRESH_AARDVARK && state_get_aardvark_mode()){
+        aardvark_draw();
     } else {
         screen_refresh_curr_frame();
     }
-    if(state_get_aardvark_mode()) aardvark_draw();
     /* Refresh and mark complete */
     state_set_refresh_state(REFRESH_COMPLETE);
 }
