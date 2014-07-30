@@ -141,7 +141,10 @@ void frame_set_highlighting(Frame_T* frame, bool highlight, bool refresh_win){
         attr_t newattr= highlight ? (A_STANDOUT|A_BOLD) : A_NORMAL;
         File_T* file = (File_T*) vec_at(frame->workdir->vfiles, frame->workdir->idx);
         short color = (file && is_dir(file->path) ? DIRECTORY : 0);
-        mvwchgat(frame->p_win, line, 0, -1, newattr, color, NULL);
+        unsigned int rows, cols;
+        (void)rows;
+        getmaxyx(frame->p_win, rows, cols);
+        mvwchgat(frame->p_win, line, 1, cols-2, newattr, color, NULL);
         if(file && file->expanded) mvwchgat(frame->p_win, line+1, color, -1, newattr, 0, NULL);
         if(frame_scroll(frame)) state_set_refresh_state(REFRESH_CURR_WIN);
         if(refresh_win) wrefresh(frame->p_win);
