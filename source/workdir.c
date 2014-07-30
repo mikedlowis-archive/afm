@@ -53,12 +53,12 @@ void file_free(void* p_vfile){
 }
 
 void workdir_set_idx(WorkDir_T* wd, int idx){
-	frame_set_highlighting(state_get_focused_frame(), false, false);
+    frame_set_highlighting(state_get_focused_frame(), false, false);
     wd->idx = idx;
     if(idx < 0) wd->idx = 0;
     else if((unsigned int)idx >= vec_size(wd->vfiles))
         wd->idx = vec_size(wd->vfiles)-1;
-	frame_set_highlighting(state_get_focused_frame(), true, true);
+    frame_set_highlighting(state_get_focused_frame(), true, true);
 }
 
 void workdir_next(WorkDir_T* wd) {
@@ -86,7 +86,7 @@ void workdir_cd(WorkDir_T* wd) {
         wd->idx = 0;
     }
     workdir_ls(wd);
-    state_set_screen_dirty(true);
+    state_set_refresh_state(REFRESH_CURR_WIN);
 }
 
 File_T* make_dotdot(char* path){
@@ -165,10 +165,10 @@ void workdir_seek(WorkDir_T* wd, char* search){
 
 void workdir_expand_selected(WorkDir_T* wd){
     ((File_T*)vec_at(wd->vfiles, wd->idx))->expanded = true;
-    state_set_screen_dirty(true);
+    state_set_refresh_state(REFRESH_CURR_WIN);
 }
 void workdir_collapse_selected(WorkDir_T* wd){
     ((File_T*)vec_at(wd->vfiles, wd->idx))->expanded = false;
-    state_set_screen_dirty(true);
+    state_set_refresh_state(REFRESH_CURR_WIN);
 }
 

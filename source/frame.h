@@ -16,6 +16,10 @@ enum ColorPairs {
 };
 
 Frame_T* frame_new(void);
+void frame_resize(Frame_T* p_frame, int lines, int cols);
+void frame_move(Frame_T* p_frame, int line, int col);
+void frame_draw(Frame_T* p_frame);
+
 void frame_page_up(Frame_T* p_frame);
 void frame_page_down(Frame_T* p_frame);
 void frame_draw_files(Frame_T* frame); //TODO: name pointers consistently
