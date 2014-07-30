@@ -20,14 +20,6 @@ static void screen_refresh_curr_frame(void);
 
 static list_t* Frame_List;
 
-/* TODO: add equiv. function to list */
-static int get_index_of_node(list_node_t* node){
-    int i = 0;
-    list_node_t* edon = Frame_List->head;
-    while(edon!=NULL && edon != node) { edon = edon->next; i++; }
-    return (edon!=NULL ? i : -1 );
-}
-
 void screen_init(void) {
     /* Initialize ncurses */
     initscr();
@@ -77,28 +69,16 @@ void screen_open(void) {
     state_set_refresh_state(REFRESH_ALL_WINS);
 }
 
-static int get_focused_frame_index(void){
-    return get_index_of_node(state_get_focused_node());
-}
-
 void screen_close(void) {
     if (Frame_List->head != Frame_List->tail) {
-        int i = get_focused_frame_index();
-        if(i >= 0){ /* negative if node not found */
-            list_node_t* doomed_node = state_get_focused_node();
-            mem_retain(doomed_node);
-            list_node_t* new_focus = doomed_node->next;
-            /* TODO: add function to list that allows removing with node pointer instead of just index */
-            list_delete(Frame_List, i);
-            // new_focus will be null if rm-d tail: set it to new tail
-            if(new_focus == NULL) new_focus = Frame_List->tail;
-            state_set_focused_node(new_focus);
-            state_set_refresh_state(REFRESH_ALL_WINS);
-            mem_release(doomed_node);
-        }else{
-            fprintf(stderr, "frame not found\n");
-        }
-    }
+        list_node_t* doomed_node = state_get_focused_node();
+        list_node_t* new_focus = doomed_node->next;
+        if(new_focus == NULL) new_focus = Frame_List->tail;
+        list_delete_node(Frame_List, doomed_node);
+        state_set_focused_node(new_focus);
+        state_set_refresh_state(REFRESH_ALL_WINS);
+        mem_release(doomed_node);
+    } /* else only one window open. do nothing */
 }
 
 static void screen_place_windows(void) {
