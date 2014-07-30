@@ -60,13 +60,13 @@ void screen_deinit(void) {
 
 void screen_update(void) {
     /* Clear screen and update LINES and COLS */
-    if(state_get_refresh_state() == REFRESH_ALL_WINS){
+    if(state_get_refresh_state() == REFRESH_AARDVARK && state_get_aardvark_mode()){
+        aardvark_draw();
+    } else if(state_get_refresh_state() == REFRESH_CURR_WIN){
+        screen_refresh_curr_frame();
+    } else {
         endwin();
         screen_place_windows();
-    } else if (state_get_refresh_state() == REFRESH_AARDVARK && state_get_aardvark_mode()){
-        aardvark_draw();
-    } else {
-        screen_refresh_curr_frame();
     }
     /* Refresh and mark complete */
     state_set_refresh_state(REFRESH_COMPLETE);
