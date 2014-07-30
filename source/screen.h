@@ -15,6 +15,6 @@ void screen_close(void);
 void screen_focus_next(void);
 void screen_focus_prev(void);
 void screen_focus_master(void);
-
+void screen_swap_with_master(void);
 
 #endif /* SCREEN_H */
