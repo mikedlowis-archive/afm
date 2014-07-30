@@ -28,26 +28,10 @@ static int get_index_of_node(list_node_t* node){
 	return (edon!=NULL ? i : -1 );
 }
 
-static bool check_frame_list(void){
-	list_node_t* node = Frame_List->head;
-	int i=0;
-	while(node!=NULL){
-		int j = get_index_of_node(node);
-		if(i != j){
-			fprintf(stderr, "problem! node %d came back as %d\n", i, j);
-			return false;
-		}
-		i++;
-		node = node->next;
-	}
-	return true;
-}
-
 void screen_init(void) {
     Frame_List = list_new();
     list_push_back(Frame_List, frame_new());
     state_set_focused_node(Frame_List->head);
-    if(!check_frame_list()) fprintf(stderr, "something wak from teh start\n");
 }
 
 void screen_deinit(void) {
@@ -69,28 +53,18 @@ void screen_update(void) {
 }
 
 void screen_open(void) {
-    if(!check_frame_list()) fprintf(stderr, "bad list before opening frame\n");
     list_push_back(Frame_List, frame_new());
     state_set_screen_dirty(true);
     state_set_screen_resized(true);
-    if(!check_frame_list()) fprintf(stderr, "bad list after opening frame\n");
 }
 
 static int get_focused_frame_index(void){
 	return get_index_of_node(state_get_focused_node());
-	/*
-    int i = 0;
-    list_node_t* n = Frame_List->head;
-    while(n != state_get_focused_node() && n != Frame_List->tail){ n = n->next; i++; }
-    if(n != state_get_focused_node()) i = -1;
-    return i;
-    */
 }
 
 void screen_close(void) {
     if (Frame_List->head != Frame_List->tail) {
         int i = get_focused_frame_index();
-        if(!check_frame_list()) fprintf(stderr, "bad list before closing frame\n");
         if(i >= 0){ /* negative if node not found */
             list_node_t* doomed_node = state_get_focused_node();
             mem_retain(doomed_node);
@@ -106,7 +80,6 @@ void screen_close(void) {
         }else{
 			fprintf(stderr, "frame not found\n");
 		}
-		if(!check_frame_list()) fprintf(stderr, "bad list after closing frame\n");
     }
 }
 
@@ -116,7 +89,6 @@ static void screen_place_windows(void) {
     int num_frames = list_size(Frame_List);
     list_node_t* p_node;
     getmaxyx(stdscr, lines, cols);
-	if(!check_frame_list()) fprintf(stderr, "bad list when placing frames\n");
     /* Print the master frame */
     p_frame = list_at(Frame_List,0)->contents;
     mvwin(p_frame->p_win, 0, 0);
@@ -176,14 +148,6 @@ void screen_focus_prev(void){
 	if(!prev) prev = Frame_List->tail;
 	state_set_focused_node(prev);
 	state_set_screen_dirty(true);
-	/*
-    int i = get_focused_frame_index();
-    if(i >= 0){
-        list_node_t* prev = (i == 0) ? Frame_List->tail : list_at(Frame_List, i-1);
-        if(prev) state_set_focused_node(prev);
-        state_set_screen_dirty(true);
-    }
-    */
 }
 
 void screen_focus_master(void){
@@ -192,11 +156,14 @@ void screen_focus_master(void){
 }
 
 void screen_swap_with_master(void){
+	//this almost works. may need to manually force refresh (R) after repositioning windows
+	//unknown why screen_force_redraw at bottom is insufficient
+	//TODO: this should be done by callign functions in list.h
+	//but reqd functions do not exist yet
 	list_node_t* focused = state_get_focused_node();
 	list_node_t* master = Frame_List->head;
 	list_node_t* prev = find_prev_node(focused);
 	list_node_t* tmp = master->next;
-	if(!check_frame_list()) fprintf(stderr, "starting with a bad list\n");
 	if(prev){ //if prev is null, implies focus is already master & should do nothing
 		//put master in list
 		if(prev!=master) prev->next = master;
@@ -205,9 +172,10 @@ void screen_swap_with_master(void){
 		if(focused != tmp) focused->next = tmp;
 		else focused->next = master;
 		Frame_List->head = focused;
+		//fix tail if put master at end
+		if(master->next == NULL) Frame_List->tail = master;
 		screen_force_redraw();
 	}
-	if(!check_frame_list()) fprintf(stderr, "ending with a bad list\n");
 }
 
 void screen_force_redraw(void){
