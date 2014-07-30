@@ -176,13 +176,18 @@ void screen_swap_with_master(void){
         //put master in list
         if(prev!=master) prev->next = master;
         master->next = focused->next;
-        //make focused new heaad
+        //make focused new head
         if(focused != tmp) focused->next = tmp;
         else focused->next = master;
         Frame_List->head = focused;
         //fix tail if put master at end
         if(master->next == NULL) Frame_List->tail = master;
         state_set_refresh_state(REFRESH_ALL_WINS);
+        // Resize and move os they don't overlap when we place them.
+        frame_resize((Frame_T*)focused->contents, 1, 1);
+        frame_move((Frame_T*)focused->contents, 0, 0);
+        frame_resize((Frame_T*)master->contents, 1, 1);
+        frame_move((Frame_T*)master->contents, 1, 1);
     }
 }
 
