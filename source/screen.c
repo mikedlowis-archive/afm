@@ -124,15 +124,8 @@ void screen_focus_next(void){
     state_set_refresh_state(REFRESH_CURR_WIN);
 }
 
-//TODO: this should be a function in list.h
-list_node_t* find_prev_node(list_node_t* node){
-    list_node_t* prev = (Frame_List->head == node) ? NULL : Frame_List->head;
-    while(prev && prev->next != node) prev=prev->next;
-    return prev;
-}
-
 void screen_focus_prev(void){
-    list_node_t* prev = find_prev_node(state_get_focused_node());
+    list_node_t* prev = list_prev(Frame_List, state_get_focused_node());
     if(!prev) prev = Frame_List->tail;
     state_set_focused_node(prev);
     state_set_refresh_state(REFRESH_CURR_WIN);
@@ -150,7 +143,7 @@ void screen_swap_with_master(void){
     //but reqd functions do not exist yet
     list_node_t* focused = state_get_focused_node();
     list_node_t* master = Frame_List->head;
-    list_node_t* prev = find_prev_node(focused);
+    list_node_t* prev = list_prev(Frame_List, focused);
     list_node_t* tmp = master->next;
     if(prev){ //if prev is null, implies focus is already master & should do nothing
         //put master in list
