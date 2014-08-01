@@ -137,30 +137,25 @@ void screen_focus_master(void){
 }
 
 void screen_swap_with_master(void){
-    //this almost works. may need to manually force refresh (R) after repositioning windows
-    //unknown why screen_force_redraw at bottom is insufficient
-    //TODO: this should be done by callign functions in list.h
-    //but reqd functions do not exist yet
     list_node_t* focused = state_get_focused_node();
     list_node_t* master = Frame_List->head;
-    list_node_t* prev = list_prev(Frame_List, focused);
-    list_node_t* tmp = master->next;
-    if(prev){ //if prev is null, implies focus is already master & should do nothing
-        //put master in list
-        if(prev!=master) prev->next = master;
-        master->next = focused->next;
-        //make focused new head
-        if(focused != tmp) focused->next = tmp;
-        else focused->next = master;
-        Frame_List->head = focused;
-        //fix tail if put master at end
-        if(master->next == NULL) Frame_List->tail = master;
-        state_set_refresh_state(REFRESH_ALL_WINS);
+    if(focused != master){
+        Frame_T* fmast = (Frame_T*)master->contents;
+        Frame_T* ffoc = (Frame_T*)focused->contents;
+        mem_retain(fmast);
+        mem_retain(ffoc);
+        list_delete_node(Frame_List, master);
+        list_insert_after(Frame_List, focused, fmast);
+        list_delete_node(Frame_List, focused);
+        list_insert_after(Frame_List, NULL, ffoc);
+        // reset focused window (since old focused destroyed)
+        state_set_focused_node(Frame_List->head);
         // Resize and move os they don't overlap when we place them.
         frame_resize((Frame_T*)focused->contents, 1, 1);
         frame_move((Frame_T*)focused->contents, 0, 0);
         frame_resize((Frame_T*)master->contents, 1, 1);
         frame_move((Frame_T*)master->contents, 1, 1);
+        state_set_refresh_state(REFRESH_ALL_WINS);
     }
 }
 
