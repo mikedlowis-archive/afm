@@ -74,6 +74,7 @@ void screen_close(void) {
         list_node_t* doomed_node = state_get_focused_node();
         list_node_t* new_focus = doomed_node->next;
         if(new_focus == NULL) new_focus = Frame_List->tail;
+        mem_retain(doomed_node);
         list_delete_node(Frame_List, doomed_node);
         state_set_focused_node(new_focus);
         state_set_refresh_state(REFRESH_ALL_WINS);
@@ -193,9 +194,9 @@ void screen_swap_frame_prev(void){
             stoopid_redraw(ffoc, fpre);
         }else{
             list_node_t* prev = Frame_List->tail;
-            list_node_t* new_node = NULL;
             Frame_T* ffoc = (Frame_T*)focused->contents;
             Frame_T* fpre = (Frame_T*)prev->contents;
+            list_node_t* new_node = NULL;
             mem_retain(ffoc);
             mem_retain(fpre);
             list_delete_node(Frame_List, focused);
