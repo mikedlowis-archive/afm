@@ -114,6 +114,7 @@ static binding_t Default_Bindings[] = {
     { "wk", &screen_focus_prev },
     { "wm", &screen_focus_master },
     { "w\n", &screen_swap_with_master },
+    { "wJ", &screen_swap_frame_next },
     { "R",  &handle_force_redraw }
 };
 
