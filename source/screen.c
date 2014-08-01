@@ -180,3 +180,31 @@ void screen_swap_frame_next(void){
     }
 }
 
+void screen_swap_frame_prev(void){
+    if(Frame_List->head != Frame_List->tail){
+        list_node_t* focused = state_get_focused_node();
+        if(focused != Frame_List->head){
+            list_node_t* prev = list_prev(Frame_List, focused);
+            Frame_T* ffoc = (Frame_T*)focused->contents;
+            Frame_T* fpre = (Frame_T*)prev->contents;
+            mem_retain(fpre);
+            list_delete_node(Frame_List, prev);
+            list_insert_after(Frame_List, focused, fpre);
+            stoopid_redraw(ffoc, fpre);
+        }else{
+            list_node_t* prev = Frame_List->tail;
+            list_node_t* new_node = NULL;
+            Frame_T* ffoc = (Frame_T*)focused->contents;
+            Frame_T* fpre = (Frame_T*)prev->contents;
+            mem_retain(ffoc);
+            mem_retain(fpre);
+            list_delete_node(Frame_List, focused);
+            list_delete_node(Frame_List, prev);
+            list_insert_after(Frame_List, NULL, fpre);
+            new_node = list_insert_after(Frame_List, Frame_List->tail, ffoc);
+            state_set_focused_node(new_node);
+            stoopid_redraw(ffoc, fpre);
+        }
+    }
+}
+
