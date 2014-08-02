@@ -174,6 +174,7 @@ void screen_swap_frame_next(void){
         list_node_t* new_node = NULL;
         Frame_T* ffoc = (Frame_T*)focused->contents;
         mem_retain(ffoc);
+        state_set_focused_node(NULL);
         list_delete_node(Frame_List, focused);
         new_node = list_insert_after(Frame_List, next, ffoc);
         state_set_focused_node(new_node);
@@ -199,6 +200,7 @@ void screen_swap_frame_prev(void){
             list_node_t* new_node = NULL;
             mem_retain(ffoc);
             mem_retain(fpre);
+            state_set_focused_node(NULL);
             list_delete_node(Frame_List, focused);
             list_delete_node(Frame_List, prev);
             list_insert_after(Frame_List, NULL, fpre);
