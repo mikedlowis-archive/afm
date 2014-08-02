@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <ncurses.h>
 
 #include "input.h"
 #include "state.h"
@@ -7,7 +8,11 @@
 #include "screen.h"
 #include "frame.h"
 
-#define ESC 27
+#define ESC (27)
+
+#define KEY_BUFFER_LENGTH (1024)
+
+static void print_status(void);
 
 typedef void (*key_cb_t)(void);
 
@@ -117,7 +122,7 @@ static binding_t Default_Bindings[] = {
     { "R",  &handle_force_redraw }
 };
 
-static char Key_Buffer[16] = {0};
+static char Key_Buffer[KEY_BUFFER_LENGTH] = {0};
 
 void input_handle_key(char ch) {
     bool more_matches = false;
@@ -125,16 +130,19 @@ void input_handle_key(char ch) {
     size_t num_entries = (sizeof(Default_Bindings) / sizeof(binding_t));
     unsigned int len = strlen(Key_Buffer);
 
-    /* If no more room then reset the buffer */
-    if (len+1 >= 16) {
+    /* Escape key puts us back into normal mode */
+    if (ch == 27u)
+    {
+        Key_Buffer[0] = '\0';
+        state_set_mode(MODE_NORMAL);
+    }
+    /* If no more room then alert the user */
+    else if (len+1 >= KEY_BUFFER_LENGTH) {
         beep();
         flash();
-        len = 0;
-        Key_Buffer[0] = '\0';
     }
-
     /* If we got a valid key then process it */
-    if((char)ERR != ch) {
+    else if((char)ERR != ch) {
         unsigned int i;
         /* Put the key in the buffer */
         len++;
@@ -169,6 +177,27 @@ void input_handle_key(char ch) {
             len = 0;
             Key_Buffer[0] = '\0';
         }
+    }
+    print_status();
+}
+
+static void print_status(void) {
+    int lines, cols;
+    getmaxyx(stdscr, lines, cols);
+    (void)cols;
+    move(lines-1, 0);
+    clrtoeol();
+    switch(state_get_mode()) {
+        case MODE_NORMAL:
+            printw(Key_Buffer);
+            break;
+
+        case MODE_SEARCH:
+            printw("/%s", Key_Buffer);
+            break;
+
+        default:
+            break;
     }
 }
 
