@@ -87,13 +87,14 @@ void screen_close(void) {
 static void screen_place_windows(void) {
     Frame_T* p_frame;
     int id, pos, lines, cols;
-    int num_frames = list_size(Frame_List);
+    int num_sub_frames = list_size(Frame_List) - 1;
     list_node_t* p_node;
     getmaxyx(stdscr, lines, cols);
+    lines-=STATUS_LINE_MARGIN;
     /* Print the master frame */
     p_frame = list_at(Frame_List,0)->contents;
     frame_move(p_frame, 0, 0);
-    frame_resize(p_frame, lines-STATUS_LINE_MARGIN, (num_frames > 1) ? cols/2 : cols);
+    frame_resize(p_frame, lines, (num_sub_frames > 0) ? cols/2 : cols);
     frame_draw(p_frame);
 
     /* Print any other frames we might have */
@@ -102,8 +103,8 @@ static void screen_place_windows(void) {
     id = 1;
     while(p_node != NULL) {
         /* Get the frame and it's properties */
-        int remain = ((lines - STATUS_LINE_MARGIN) % (num_frames-1));
-        int height = ((lines - STATUS_LINE_MARGIN) / (num_frames-1)) + (id <= remain ? 1 : 0);
+        int remain = (lines % num_sub_frames);
+        int height = (lines / num_sub_frames) + (id <= remain ? 1 : 0);
         p_frame = p_node->contents;
         /* Place the frame */
         frame_move(p_frame, pos, cols/2);

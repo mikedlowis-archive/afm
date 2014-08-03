@@ -118,8 +118,7 @@ void input_handle_key(char ch) {
     }
 
     /* Escape key puts us back into normal mode */
-    if (ch == ESC)
-    {
+    if (ch == ESC) {
         Key_Buffer[0] = '\0';
         state_set_mode(MODE_NORMAL);
     }
@@ -181,8 +180,7 @@ static void normal_mode(void) {
 static void search_mode(void) {
     size_t len = strlen(Key_Buffer);
     char prev = Key_Buffer[len-1];
-    if (prev == '\n')
-    {
+    if (prev == '\n') {
         handle_cd();
         Key_Buffer[0] = '\n';
         state_set_mode(MODE_NORMAL);
