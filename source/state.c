@@ -44,12 +44,12 @@ list_node_t* state_get_focused_node(void) {
 }
 
 Frame_T* state_get_focused_frame(void) {
-    return Focused_Node ? (Frame_T*)Focused_Node->contents : NULL;
+    return (NULL != Focused_Node) ? (Frame_T*)Focused_Node->contents : NULL;
 }
 
 WorkDir_T* state_get_focused_workdir(void) {
     Frame_T* focused_frame = state_get_focused_frame();
-    return focused_frame ? focused_frame->workdir : NULL;
+    return (NULL != focused_frame) ? focused_frame->workdir : NULL;
 }
 
 void state_set_focused_node(list_node_t *p_node) {
