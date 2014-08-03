@@ -74,6 +74,7 @@ void screen_close(void) {
         list_node_t* doomed_node = state_get_focused_node();
         list_node_t* new_focus = doomed_node->next;
         if(new_focus == NULL) new_focus = Frame_List->tail;
+        mem_retain(doomed_node);
         list_delete_node(Frame_List, doomed_node);
         state_set_focused_node(new_focus);
         state_set_refresh_state(REFRESH_ALL_WINS);
@@ -136,31 +137,77 @@ void screen_focus_master(void){
     state_set_refresh_state(REFRESH_CURR_WIN);
 }
 
+//for when force refresh (R) fixes the screen,
+//but setting screen REFRESH_ALL_WINS doesnt
+//necessary when moving frames around
+static void stoopid_redraw(Frame_T* a, Frame_T* b){
+    frame_resize(a, 1, 1);
+    frame_move(a, 0, 0);
+    frame_resize(b, 1, 1);
+    frame_move(b, 1, 1);
+    state_set_refresh_state(REFRESH_ALL_WINS);
+}
+
 void screen_swap_with_master(void){
-    //this almost works. may need to manually force refresh (R) after repositioning windows
-    //unknown why screen_force_redraw at bottom is insufficient
-    //TODO: this should be done by callign functions in list.h
-    //but reqd functions do not exist yet
     list_node_t* focused = state_get_focused_node();
     list_node_t* master = Frame_List->head;
-    list_node_t* prev = list_prev(Frame_List, focused);
-    list_node_t* tmp = master->next;
-    if(prev){ //if prev is null, implies focus is already master & should do nothing
-        //put master in list
-        if(prev!=master) prev->next = master;
-        master->next = focused->next;
-        //make focused new head
-        if(focused != tmp) focused->next = tmp;
-        else focused->next = master;
-        Frame_List->head = focused;
-        //fix tail if put master at end
-        if(master->next == NULL) Frame_List->tail = master;
-        state_set_refresh_state(REFRESH_ALL_WINS);
+    if(focused != master){
+        Frame_T* fmast = (Frame_T*)master->contents;
+        Frame_T* ffoc = (Frame_T*)focused->contents;
+        mem_retain(fmast);
+        mem_retain(ffoc);
+        list_delete_node(Frame_List, master);
+        list_insert_after(Frame_List, focused, fmast);
+        list_delete_node(Frame_List, focused);
+        list_insert_after(Frame_List, NULL, ffoc);
+        // reset focused window (since old focused destroyed)
+        state_set_focused_node(Frame_List->head);
         // Resize and move os they don't overlap when we place them.
-        frame_resize((Frame_T*)focused->contents, 1, 1);
-        frame_move((Frame_T*)focused->contents, 0, 0);
-        frame_resize((Frame_T*)master->contents, 1, 1);
-        frame_move((Frame_T*)master->contents, 1, 1);
+        stoopid_redraw(fmast, ffoc);
+    }
+}
+
+void screen_swap_frame_next(void){
+    if(Frame_List->head != Frame_List->tail){
+        list_node_t* focused = state_get_focused_node();
+        list_node_t* next = focused->next;
+        list_node_t* new_node = NULL;
+        Frame_T* ffoc = (Frame_T*)focused->contents;
+        mem_retain(ffoc);
+        state_set_focused_node(NULL);
+        list_delete_node(Frame_List, focused);
+        new_node = list_insert_after(Frame_List, next, ffoc);
+        state_set_focused_node(new_node);
+        stoopid_redraw(ffoc, (Frame_T*) ((NULL == next) ? Frame_List->tail->contents : next->contents));
+    }
+}
+
+void screen_swap_frame_prev(void){
+    if(Frame_List->head != Frame_List->tail){
+        list_node_t* focused = state_get_focused_node();
+        if(focused != Frame_List->head){
+            list_node_t* prev = list_prev(Frame_List, focused);
+            Frame_T* ffoc = (Frame_T*)focused->contents;
+            Frame_T* fpre = (Frame_T*)prev->contents;
+            mem_retain(fpre);
+            list_delete_node(Frame_List, prev);
+            list_insert_after(Frame_List, focused, fpre);
+            stoopid_redraw(ffoc, fpre);
+        }else{
+            list_node_t* prev = Frame_List->tail;
+            Frame_T* ffoc = (Frame_T*)focused->contents;
+            Frame_T* fpre = (Frame_T*)prev->contents;
+            list_node_t* new_node = NULL;
+            mem_retain(ffoc);
+            mem_retain(fpre);
+            state_set_focused_node(NULL);
+            list_delete_node(Frame_List, focused);
+            list_delete_node(Frame_List, prev);
+            list_insert_after(Frame_List, NULL, fpre);
+            new_node = list_insert_after(Frame_List, Frame_List->tail, ffoc);
+            state_set_focused_node(new_node);
+            stoopid_redraw(ffoc, fpre);
+        }
     }
 }
 
