@@ -47,6 +47,24 @@ static void frame_free(void* p_frame_ptr) {
     if(p_frame->workdir) mem_release(p_frame->workdir);
 }
 
+void frame_resize(Frame_T* p_frame, int lines, int cols)
+{
+    wresize(p_frame->p_win, lines, cols);
+}
+
+void frame_move(Frame_T* p_frame, int line, int col)
+{
+    mvwin(p_frame->p_win, line, col);
+}
+
+void frame_draw(Frame_T* p_frame)
+{
+    wclear(p_frame->p_win);
+    frame_draw_files(p_frame);
+    box(p_frame->p_win, 0 , 0);
+    wrefresh(p_frame->p_win);
+}
+
 static int count_double_lines_to_idx(Frame_T* p_frame, bool inclusive){
     int count = 0;
     int target = p_frame->workdir->idx + (inclusive ? 1 : 0);
@@ -67,7 +85,7 @@ static bool frame_scroll(Frame_T* p_frame){
         int doublelines = count_double_lines_to_idx(p_frame, true);
         if (p_frame->top_index < doublelines+p_frame->workdir->idx-(rows-FrameTopBuffer-FrameBotBuffer)){
             p_frame->top_index = doublelines+p_frame->workdir->idx-(rows-FrameTopBuffer-FrameBotBuffer);
-			changed = true;
+            changed = true;
         }
     }
     return changed;
@@ -89,8 +107,8 @@ void frame_page_down(Frame_T* p_frame){
 }
 
 void frame_draw_files(Frame_T* frame){
-    int file_i, frame_i = FrameTopBuffer;
-    int rows, cols;
+    unsigned int file_i, frame_i = FrameTopBuffer;
+    unsigned int rows, cols;
     getmaxyx(frame->p_win, rows, cols);
     frame_scroll(frame);
     file_i = frame->top_index;
@@ -118,15 +136,19 @@ void frame_draw_files(Frame_T* frame){
 
 
 void frame_set_highlighting(Frame_T* frame, bool highlight, bool refresh_win){
-	if(frame){
-		int line = FrameTopBuffer + count_double_lines_to_idx(frame, false) + frame->workdir->idx - frame->top_index;
-		attr_t newattr= highlight ? (A_STANDOUT|A_BOLD) : A_NORMAL;
-		File_T* file = (File_T*) vec_at(frame->workdir->vfiles, frame->workdir->idx);
-		short color = (file && is_dir(file->path) ? DIRECTORY : 0);
-		mvwchgat(frame->p_win, line, 0, -1, newattr, color, NULL);
-		if(file && file->expanded) mvwchgat(frame->p_win, line+1, color, -1, newattr, 0, NULL);
-		if(frame_scroll(frame)) state_set_screen_dirty(true);
-		if(refresh_win) wrefresh(frame->p_win);
-	}
+    if(frame){
+        int rows,cols;
+        int line = FrameTopBuffer + count_double_lines_to_idx(frame, false) + frame->workdir->idx - frame->top_index;
+        attr_t newattr= highlight ? (A_STANDOUT|A_BOLD) : A_NORMAL;
+        File_T* file = (File_T*) vec_at(frame->workdir->vfiles, frame->workdir->idx);
+        short color = (file && is_dir(file->path) ? DIRECTORY : 0);
+        getmaxyx(frame->p_win, rows, cols);
+        (void) rows;
+        mvwchgat(frame->p_win, line, 1, cols-2, newattr, color, NULL);
+        if(file && file->expanded) mvwchgat(frame->p_win, line+1, 1, cols-2, newattr, color, NULL);
+        wmove(frame->p_win, 0, 0); //move the cursor out of the way
+        if(frame_scroll(frame)) state_set_refresh_state(REFRESH_CURR_WIN);
+        if(refresh_win) wrefresh(frame->p_win);
+    }
 }
 

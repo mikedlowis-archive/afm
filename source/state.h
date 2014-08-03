@@ -13,22 +13,31 @@
 #include "frame.h"
 #include "workdir.h"
 
-
-typedef enum{ MODE_NORMAL, MODE_SEARCH } Mode_T;
-
 bool state_get_running(void);
 void state_set_running(bool val);
-bool state_get_screen_dirty(void);
-void state_set_screen_dirty(bool val);
-bool state_get_screen_resized(void);
-void state_set_screen_resized(bool val);
 bool state_get_aardvark_mode(void);
 void state_set_aardvark_mode(bool val);
 void state_set_focused_node(list_node_t* p_node);
 list_node_t* state_get_focused_node(void);
 Frame_T* state_get_focused_frame(void);
 WorkDir_T* state_get_focused_workdir(void);
+
+typedef enum {
+    REFRESH_COMPLETE,
+    REFRESH_CURR_WIN,
+    REFRESH_ALL_WINS,
+    REFRESH_AARDVARK,
+} RefreshState_T;
+
+RefreshState_T state_get_refresh_state(void);
+void state_set_refresh_state(RefreshState_T state);
+
+typedef enum {
+    MODE_NORMAL,
+    MODE_SEARCH
+} Mode_T;
+
 Mode_T state_get_mode(void);
-void state_set_mode(Mode_T);
+void state_set_mode(Mode_T mode);
 
 #endif /* STATE_H */

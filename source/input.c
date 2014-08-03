@@ -18,7 +18,7 @@ typedef struct {
 
 static void handle_aardvark(void) {
     state_set_aardvark_mode(!state_get_aardvark_mode());
-    state_set_screen_dirty(true);
+    state_set_refresh_state(REFRESH_AARDVARK);
 }
 
 static void handle_quit(void) {
@@ -85,10 +85,14 @@ static void search_mode(void){
             searchstr[searchlen] = 0;
             workdir_seek(state_get_focused_workdir(), searchstr);
         }
-        if(state_get_screen_dirty()) screen_update();
+        if(state_get_refresh_state() != REFRESH_COMPLETE) screen_update();
     }
     free(searchstr);
     state_set_mode(MODE_NORMAL);
+}
+
+void handle_force_redraw(void){
+    state_set_refresh_state(REFRESH_ALL_WINS);
 }
 
 static binding_t Default_Bindings[] = {
@@ -108,7 +112,11 @@ static binding_t Default_Bindings[] = {
     { "h",  &handle_collapse },
     { "wj", &screen_focus_next },
     { "wk", &screen_focus_prev },
-    { "w\n", &screen_focus_master }
+    { "wm", &screen_focus_master },
+    { "w\n", &screen_swap_with_master },
+    { "wJ", &screen_swap_frame_next },
+    { "wK", &screen_swap_frame_prev },
+    { "R",  &handle_force_redraw }
 };
 
 static char Key_Buffer[16] = {0};
@@ -117,7 +125,7 @@ void input_handle_key(char ch) {
     bool more_matches = false;
     bool match_found  = false;
     size_t num_entries = (sizeof(Default_Bindings) / sizeof(binding_t));
-    int len = strlen(Key_Buffer);
+    unsigned int len = strlen(Key_Buffer);
 
     /* If no more room then reset the buffer */
     if (len+1 >= 16) {
@@ -129,7 +137,7 @@ void input_handle_key(char ch) {
 
     /* If we got a valid key then process it */
     if((char)ERR != ch) {
-        int i;
+        unsigned int i;
         /* Put the key in the buffer */
         len++;
         Key_Buffer[len-1] = ch;
@@ -142,14 +150,12 @@ void input_handle_key(char ch) {
 
             /* If the binding we're looking at matches a substring but has more chars
              * make note of it so we can wait for the next char */
-            if((strlen(seq) > len) && (0 == strncmp(seq, Key_Buffer, len)))
-            {
+            if((strlen(seq) > len) && (0 == strncmp(seq, Key_Buffer, len))) {
                 more_matches = true;
             }
 
             /* If the current string matches exactly then execute it's handler */
-            if (0 == strcmp(Key_Buffer, seq))
-            {
+            if (0 == strcmp(Key_Buffer, seq)) {
                 binding.callback();
                 Key_Buffer[0] = '\0';
                 match_found = true;
