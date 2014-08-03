@@ -16,6 +16,7 @@ static size_t Key_Buffer_Size = 0;
 
 static char* Key_Buffer = NULL;
 
+//keybinding function callback
 typedef void (*key_cb_t)(void);
 
 typedef struct {
@@ -143,8 +144,7 @@ void input_handle_key(char ch) {
 
 static void normal_mode(void) {
     static const size_t num_entries = (sizeof(Default_Bindings) / sizeof(binding_t));
-    bool more_matches = false;
-    bool match_found  = false;
+    bool any_matches = false;
     size_t len = strlen(Key_Buffer);
 
     /* Loop over the bindings */
@@ -152,24 +152,20 @@ static void normal_mode(void) {
         binding_t binding = Default_Bindings[i];
         char* seq = binding.sequence;
 
-        /* If the binding we're looking at matches a substring but has more chars
-         * make note of it so we can wait for the next char */
-        if((strlen(seq) > len) && (0 == strncmp(seq, Key_Buffer, len))) {
-            more_matches = true;
-        }
-
-        /* If the current string matches exactly then execute it's handler */
-        if (0 == strcmp(Key_Buffer, seq)) {
-            binding.callback();
-            Key_Buffer[0] = '\0';
-            match_found = true;
-            break;
+        /* check if the binding matches the buffer as entered so far */
+        if (0 == strncmp(Key_Buffer, seq, len)) {
+            any_matches = true;
+            if(strlen(seq) == len) { /* an exact match. execute it */
+                binding.callback();
+                Key_Buffer[0] = '\0';
+                break;
+            }
         }
     }
 
     /* If we did not find a match and we don't have any possibility of
      * finding a longer match, then throw out the buffer and start over */
-    if(!match_found && !more_matches) {
+    if(!any_matches) {
         beep();
         flash();
         len = 0;
@@ -182,7 +178,7 @@ static void search_mode(void) {
     char prev = Key_Buffer[len-1];
     if (prev == '\n') {
         handle_cd();
-        Key_Buffer[0] = '\n';
+        Key_Buffer[0] = '\0';
         state_set_mode(MODE_NORMAL);
     } else {
         workdir_seek(state_get_focused_workdir(), Key_Buffer);
