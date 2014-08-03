@@ -23,10 +23,10 @@ Frame_T* state_get_focused_frame(void);
 WorkDir_T* state_get_focused_workdir(void);
 
 typedef enum {
-    REFRESH_COMPLETE,
+    REFRESH_COMPLETE = 0,
     REFRESH_CURR_WIN,
-    REFRESH_ALL_WINS,
     REFRESH_AARDVARK,
+    REFRESH_ALL_WINS,
 } RefreshState_T;
 
 RefreshState_T state_get_refresh_state(void);
