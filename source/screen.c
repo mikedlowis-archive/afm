@@ -52,14 +52,14 @@ void screen_deinit(void) {
 
 void screen_update(void) {
     /* Clear screen and update LINES and COLS */
-    if(state_get_refresh_state() == REFRESH_AARDVARK && state_get_aardvark_mode()){
-        aardvark_draw();
-    } else if(state_get_refresh_state() == REFRESH_CURR_WIN){
+    if(state_get_refresh_state() == REFRESH_CURR_WIN){
         screen_refresh_curr_frame();
-    } else {
+    } else if (state_get_refresh_state() == REFRESH_ALL_WINS) {
         endwin();
         screen_place_windows();
     }
+    if(state_get_aardvark_mode() && state_get_refresh_state() != REFRESH_COMPLETE)
+        aardvark_draw();
     /* Refresh and mark complete */
     state_set_refresh_state(REFRESH_COMPLETE);
 }
