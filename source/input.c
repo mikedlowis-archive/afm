@@ -12,7 +12,9 @@
 
 #define KEY_BUFFER_LENGTH (1024)
 
-static void print_status(void);
+static size_t Key_Buffer_Size = 0;
+
+static char* Key_Buffer = NULL;
 
 typedef void (*key_cb_t)(void);
 
@@ -66,69 +68,52 @@ static void handle_collapse(void){
     workdir_collapse_selected(state_get_focused_workdir());
 }
 
-static void search_mode(void){
-    int searchcap = 8;
-    char* searchstr = malloc(sizeof(char)*searchcap);
-    int searchlen = 0;
-    bool searching = true;
-    state_set_mode(MODE_SEARCH);
-    while(searching){
-        char inpt = getch();
-        if(inpt == ERR){ /* do nothing */
-        }else if(inpt == ESC){
-            searching = false;
-        }else if (inpt == '\n'){
-            searching = false;
-            handle_cd();
-        }else{
-            if(searchlen+1 >= searchcap){
-                searchcap *= 2;
-                searchstr = realloc(searchstr, sizeof(char)*searchcap);
-            }
-            searchstr[searchlen] = inpt;
-            searchlen += 1;
-            searchstr[searchlen] = 0;
-            workdir_seek(state_get_focused_workdir(), searchstr);
-        }
-        if(state_get_refresh_state() != REFRESH_COMPLETE) screen_update();
-    }
-    free(searchstr);
-    state_set_mode(MODE_NORMAL);
-}
-
 void handle_force_redraw(void){
     state_set_refresh_state(REFRESH_ALL_WINS);
 }
 
+void handle_search_mode(void){
+    state_set_mode(MODE_SEARCH);
+}
+
 static binding_t Default_Bindings[] = {
-    { "a",  &handle_aardvark },
-    { "q",  &handle_quit },
-    { "j",  &handle_next },
-    { "k",  &handle_prev },
-    { "\n", &handle_cd },
-    { "wn", &screen_open },
-    { "wc", &screen_close },
-    { "/",  &search_mode },
-    { "gg", &handle_scroll_to_top },
-    { "G",  &handle_scroll_to_bottom },
-    { "U",  &handle_page_up },
-    { "D",  &handle_page_down },
-    { "l",  &handle_expand },
-    { "h",  &handle_collapse },
-    { "wj", &screen_focus_next },
-    { "wk", &screen_focus_prev },
-    { "wm", &screen_focus_master },
+    { "a",   &handle_aardvark },
+    { "q",   &handle_quit },
+    { "j",   &handle_next },
+    { "k",   &handle_prev },
+    { "\n",  &handle_cd },
+    { "wn",  &screen_open },
+    { "wc",  &screen_close },
+    { "/",   &handle_search_mode },
+    { "gg",  &handle_scroll_to_top },
+    { "G",   &handle_scroll_to_bottom },
+    { "U",   &handle_page_up },
+    { "D",   &handle_page_down },
+    { "l",   &handle_expand },
+    { "h",   &handle_collapse },
+    { "wj",  &screen_focus_next },
+    { "wk",  &screen_focus_prev },
+    { "wm",  &screen_focus_master },
     { "w\n", &screen_swap_with_master },
-    { "R",  &handle_force_redraw }
+    { "R",   &handle_force_redraw }
 };
 
-static char Key_Buffer[KEY_BUFFER_LENGTH] = {0};
+static void normal_mode(void);
+static void search_mode(void);
+static void print_status(void);
 
 void input_handle_key(char ch) {
-    bool more_matches = false;
-    bool match_found  = false;
-    size_t num_entries = (sizeof(Default_Bindings) / sizeof(binding_t));
-    unsigned int len = strlen(Key_Buffer);
+    unsigned int len = (Key_Buffer == NULL) ? 0 : strlen(Key_Buffer);
+
+    /* If no more room then alert the user */
+    if (len+1 >= Key_Buffer_Size) {
+        if (Key_Buffer_Size == 0)
+            Key_Buffer_Size = 8;
+        else
+            Key_Buffer_Size *= 2;
+        Key_Buffer = realloc(Key_Buffer, Key_Buffer_Size);
+        Key_Buffer[len] = '\0';
+    }
 
     /* Escape key puts us back into normal mode */
     if (ch == 27u)
@@ -136,49 +121,75 @@ void input_handle_key(char ch) {
         Key_Buffer[0] = '\0';
         state_set_mode(MODE_NORMAL);
     }
-    /* If no more room then alert the user */
-    else if (len+1 >= KEY_BUFFER_LENGTH) {
-        beep();
-        flash();
-    }
     /* If we got a valid key then process it */
     else if((char)ERR != ch) {
-        unsigned int i;
         /* Put the key in the buffer */
         len++;
         Key_Buffer[len-1] = ch;
         Key_Buffer[len]   = '\0';
 
-        /* Loop over the bindings */
-        for(i = 0; i < num_entries; i++) {
-            binding_t binding = Default_Bindings[i];
-            char* seq = binding.sequence;
-
-            /* If the binding we're looking at matches a substring but has more chars
-             * make note of it so we can wait for the next char */
-            if((strlen(seq) > len) && (0 == strncmp(seq, Key_Buffer, len))) {
-                more_matches = true;
-            }
-
-            /* If the current string matches exactly then execute it's handler */
-            if (0 == strcmp(Key_Buffer, seq)) {
-                binding.callback();
-                Key_Buffer[0] = '\0';
-                match_found = true;
-                break;
-            }
-        }
-
-        /* If we did not find a match and we don't have any possibility of
-         * finding a longer match, then throw out the buffer and start over */
-        if(!match_found && !more_matches) {
-            beep();
-            flash();
-            len = 0;
-            Key_Buffer[0] = '\0';
+        /* Execute the proper mode handler */
+        switch(state_get_mode()) {
+            case MODE_NORMAL: normal_mode(); break;
+            case MODE_SEARCH: search_mode(); break;
+            default: break;
         }
     }
+
+    /* Update the status line */
     print_status();
+}
+
+static void normal_mode(void) {
+    static const size_t num_entries = (sizeof(Default_Bindings) / sizeof(binding_t));
+    bool more_matches = false;
+    bool match_found  = false;
+    size_t len = strlen(Key_Buffer);
+
+    /* Loop over the bindings */
+    for(size_t i = 0; i < num_entries; i++) {
+        binding_t binding = Default_Bindings[i];
+        char* seq = binding.sequence;
+
+        /* If the binding we're looking at matches a substring but has more chars
+         * make note of it so we can wait for the next char */
+        if((strlen(seq) > len) && (0 == strncmp(seq, Key_Buffer, len))) {
+            more_matches = true;
+        }
+
+        /* If the current string matches exactly then execute it's handler */
+        if (0 == strcmp(Key_Buffer, seq)) {
+            binding.callback();
+            Key_Buffer[0] = '\0';
+            match_found = true;
+            break;
+        }
+    }
+
+    /* If we did not find a match and we don't have any possibility of
+     * finding a longer match, then throw out the buffer and start over */
+    if(!match_found && !more_matches) {
+        beep();
+        flash();
+        len = 0;
+        Key_Buffer[0] = '\0';
+    }
+}
+
+static void search_mode(void) {
+    size_t len = strlen(Key_Buffer);
+    char prev = Key_Buffer[len-1];
+    if (prev == '\n')
+    {
+        handle_cd();
+        Key_Buffer[0] = '\n';
+        state_set_mode(MODE_NORMAL);
+    }
+    else
+    {
+        workdir_seek(state_get_focused_workdir(), Key_Buffer);
+    }
+    if(state_get_refresh_state() != REFRESH_COMPLETE) screen_update();
 }
 
 static void print_status(void) {
