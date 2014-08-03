@@ -116,7 +116,7 @@ void input_handle_key(char ch) {
     }
 
     /* Escape key puts us back into normal mode */
-    if (ch == 27u)
+    if (ch == ESC)
     {
         Key_Buffer[0] = '\0';
         state_set_mode(MODE_NORMAL);
