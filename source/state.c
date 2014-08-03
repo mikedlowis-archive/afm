@@ -64,7 +64,9 @@ RefreshState_T state_get_refresh_state(void)
 
 void state_set_refresh_state(RefreshState_T state)
 {
-    RefreshState = state;
+    if ((state == REFRESH_COMPLETE) || (RefreshState < state)) {
+        RefreshState = state;
+    }
 }
 
 Mode_T state_get_mode(void) {

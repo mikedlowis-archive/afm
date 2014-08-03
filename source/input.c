@@ -25,8 +25,13 @@ typedef struct {
 } binding_t;
 
 static void handle_aardvark(void) {
-    state_set_aardvark_mode(!state_get_aardvark_mode());
-    state_set_refresh_state(REFRESH_AARDVARK);
+    if(state_get_aardvark_mode()){
+        state_set_aardvark_mode(false);
+        state_set_refresh_state(REFRESH_ALL_WINS);
+    }else{
+        state_set_aardvark_mode(true);
+        state_set_refresh_state(REFRESH_AARDVARK);
+    }
 }
 
 static void handle_quit(void) {
