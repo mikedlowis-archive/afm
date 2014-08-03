@@ -74,8 +74,8 @@ static void handle_collapse(void){
     workdir_collapse_selected(state_get_focused_workdir());
 }
 
-void handle_force_redraw(void){
-    state_set_refresh_state(REFRESH_ALL_WINS);
+void handle_reload_frame(void){
+	frame_reload(state_get_focused_frame());
 }
 
 void handle_search_mode(void){
@@ -101,9 +101,10 @@ static binding_t Default_Bindings[] = {
     { "wk",  &screen_focus_prev },
     { "wm",  &screen_focus_master },
     { "w\n", &screen_swap_with_master },
-    { "wJ", &screen_swap_frame_next },
-    { "wK", &screen_swap_frame_prev },
-    { "R",  &handle_force_redraw }
+    { "wJ",  &screen_swap_frame_next },
+    { "wK",  &screen_swap_frame_prev },
+    { "R",   &screen_reload_all_frames },
+    { "r",   &handle_reload_frame }
 };
 
 static void normal_mode(void);

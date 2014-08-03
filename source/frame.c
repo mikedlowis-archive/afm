@@ -152,3 +152,9 @@ void frame_set_highlighting(Frame_T* frame, bool highlight, bool refresh_win){
     }
 }
 
+void frame_reload(Frame_T* frame){
+	workdir_ls(frame->workdir);
+	frame_draw_files(frame);
+	state_set_refresh_state(REFRESH_CURR_WIN);
+}
+

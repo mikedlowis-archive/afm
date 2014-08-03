@@ -18,5 +18,6 @@ void screen_focus_master(void);
 void screen_swap_with_master(void);
 void screen_swap_frame_next(void);
 void screen_swap_frame_prev(void);
+void screen_reload_all_frames(void);
 
 #endif /* SCREEN_H */

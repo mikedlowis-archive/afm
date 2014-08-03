@@ -214,3 +214,12 @@ void screen_swap_frame_prev(void){
     }
 }
 
+void screen_reload_all_frames(void){
+	list_node_t* node = Frame_List->head;
+	while(NULL != node){
+		frame_reload((Frame_T*)node->contents);
+		node = node->next;
+	}
+	state_set_refresh_state(REFRESH_ALL_WINS);
+}
+

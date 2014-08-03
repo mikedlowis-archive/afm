@@ -24,6 +24,7 @@ void frame_page_up(Frame_T* p_frame);
 void frame_page_down(Frame_T* p_frame);
 void frame_draw_files(Frame_T* frame); //TODO: name pointers consistently
 void frame_set_highlighting(Frame_T* frame, bool highlight, bool refresh_win);
+void frame_reload(Frame_T* frame);
 
 #endif /* FRAME_H */
 
