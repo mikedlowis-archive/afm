@@ -95,7 +95,9 @@ static binding_t Default_Bindings[] = {
     { "wk",  &screen_focus_prev },
     { "wm",  &screen_focus_master },
     { "w\n", &screen_swap_with_master },
-    { "R",   &handle_force_redraw }
+    { "wJ", &screen_swap_frame_next },
+    { "wK", &screen_swap_frame_prev },
+    { "R",  &handle_force_redraw }
 };
 
 static void normal_mode(void);
@@ -184,9 +186,7 @@ static void search_mode(void) {
         handle_cd();
         Key_Buffer[0] = '\n';
         state_set_mode(MODE_NORMAL);
-    }
-    else
-    {
+    } else {
         workdir_seek(state_get_focused_workdir(), Key_Buffer);
     }
     if(state_get_refresh_state() != REFRESH_COMPLETE) screen_update();
