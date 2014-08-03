@@ -24,8 +24,8 @@ WorkDir_T* state_get_focused_workdir(void);
 
 typedef enum {
     REFRESH_COMPLETE = 0,
-    REFRESH_CURR_WIN,
     REFRESH_AARDVARK,
+    REFRESH_CURR_WIN,
     REFRESH_ALL_WINS,
 } RefreshState_T;
 
