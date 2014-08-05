@@ -17,7 +17,7 @@ static bool AardvarkOn = false;
 static list_node_t* Focused_Node  = NULL;
 
 /** Current refresh state */
-static RefreshState_T RefreshState = REFRESH_ALL_WINS;
+static RefreshState_T RefreshState = REDRAW_ALL_FRAMES;
 
 /** Current operational mode */
 static Mode_T CurrentMode = MODE_NORMAL;
@@ -64,7 +64,7 @@ RefreshState_T state_get_refresh_state(void)
 
 void state_set_refresh_state(RefreshState_T state)
 {
-    if ((state == REFRESH_COMPLETE) || (RefreshState < state)) {
+    if ((state == REDRAW_COMPLETE) || (RefreshState < state)) {
         RefreshState = state;
     }
 }

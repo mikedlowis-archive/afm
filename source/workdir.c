@@ -86,7 +86,7 @@ void workdir_cd(WorkDir_T* wd) {
         wd->idx = 0;
     }
     workdir_ls(wd);
-    state_set_refresh_state(REFRESH_CURR_WIN);
+    state_set_refresh_state(REDRAW_CURR_FRAME);
 }
 
 File_T* make_dotdot(char* path){
@@ -165,10 +165,10 @@ void workdir_seek(WorkDir_T* wd, char* search){
 
 void workdir_expand_selected(WorkDir_T* wd){
     ((File_T*)vec_at(wd->vfiles, wd->idx))->expanded = true;
-    state_set_refresh_state(REFRESH_CURR_WIN);
+    state_set_refresh_state(REDRAW_CURR_FRAME);
 }
 void workdir_collapse_selected(WorkDir_T* wd){
     ((File_T*)vec_at(wd->vfiles, wd->idx))->expanded = false;
-    state_set_refresh_state(REFRESH_CURR_WIN);
+    state_set_refresh_state(REDRAW_CURR_FRAME);
 }
 
