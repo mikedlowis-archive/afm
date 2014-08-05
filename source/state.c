@@ -16,8 +16,8 @@ static bool AardvarkOn = false;
 /** A pointer to the currently focused node */
 static list_node_t* Focused_Node  = NULL;
 
-/** Current refresh state */
-static RefreshState_T RefreshState = REFRESH_ALL_WINS;
+/** Current redraw state */
+static RedrawState_T RedrawState = REDRAW_ALL_FRAMES;
 
 /** Current operational mode */
 static Mode_T CurrentMode = MODE_NORMAL;
@@ -57,15 +57,15 @@ void state_set_focused_node(list_node_t *p_node) {
     Focused_Node = p_node;
 }
 
-RefreshState_T state_get_refresh_state(void)
+RedrawState_T state_get_redraw_state(void)
 {
-    return RefreshState;
+    return RedrawState;
 }
 
-void state_set_refresh_state(RefreshState_T state)
+void state_set_redraw_state(RedrawState_T state)
 {
-    if ((state == REFRESH_COMPLETE) || (RefreshState < state)) {
-        RefreshState = state;
+    if ((state == REDRAW_COMPLETE) || (RedrawState < state)) {
+        RedrawState = state;
     }
 }
 
