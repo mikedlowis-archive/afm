@@ -18,7 +18,7 @@
 #define STATUS_LINE_MARGIN (1u)
 
 static void screen_place_windows(void);
-static void screen_refresh_curr_frame(void);
+static void screen_redraw_curr_frame(void);
 
 static list_t* Frame_List;
 
@@ -53,22 +53,22 @@ void screen_deinit(void) {
 }
 
 void screen_update(void) {
-    /* Clear screen and update LINES and COLS */
-    if(state_get_refresh_state() == REDRAW_CURR_FRAME){
-        screen_refresh_curr_frame();
-    } else if (state_get_refresh_state() == REDRAW_ALL_FRAMES) {
+    /* redraw frames as needed */
+    if(state_get_redraw_state() == REDRAW_CURR_FRAME){
+        screen_redraw_curr_frame();
+    } else if (state_get_redraw_state() == REDRAW_ALL_FRAMES) {
         endwin();
         screen_place_windows();
     }
-    if(state_get_aardvark_mode() && state_get_refresh_state() != REDRAW_COMPLETE)
+    if(state_get_aardvark_mode() && state_get_redraw_state() != REDRAW_COMPLETE)
         aardvark_draw();
-    /* Refresh and mark complete */
-    state_set_refresh_state(REDRAW_COMPLETE);
+    /* mark complete */
+    state_set_redraw_state(REDRAW_COMPLETE);
 }
 
 void screen_open(void) {
     list_push_back(Frame_List, frame_new());
-    state_set_refresh_state(REDRAW_ALL_FRAMES);
+    state_set_redraw_state(REDRAW_ALL_FRAMES);
 }
 
 void screen_close(void) {
@@ -79,7 +79,7 @@ void screen_close(void) {
         mem_retain(doomed_node);
         list_delete_node(Frame_List, doomed_node);
         state_set_focused_node(new_focus);
-        state_set_refresh_state(REDRAW_ALL_FRAMES);
+        state_set_redraw_state(REDRAW_ALL_FRAMES);
         mem_release(doomed_node);
     } /* else only one window open. do nothing */
 }
@@ -117,7 +117,7 @@ static void screen_place_windows(void) {
     }
 }
 
-static void screen_refresh_curr_frame(void) {
+static void screen_redraw_curr_frame(void) {
     Frame_T* p_frame = state_get_focused_frame();
     frame_draw(p_frame);
 }
@@ -125,22 +125,22 @@ static void screen_refresh_curr_frame(void) {
 void screen_focus_next(void){
     list_node_t* focused = state_get_focused_node();
     state_set_focused_node(focused->next ? focused->next : Frame_List->head);
-    state_set_refresh_state(REDRAW_CURR_FRAME);
+    state_set_redraw_state(REDRAW_CURR_FRAME);
 }
 
 void screen_focus_prev(void){
     list_node_t* prev = list_prev(Frame_List, state_get_focused_node());
     if(!prev) prev = Frame_List->tail;
     state_set_focused_node(prev);
-    state_set_refresh_state(REDRAW_CURR_FRAME);
+    state_set_redraw_state(REDRAW_CURR_FRAME);
 }
 
 void screen_focus_master(void){
     state_set_focused_node(Frame_List->head);
-    state_set_refresh_state(REDRAW_CURR_FRAME);
+    state_set_redraw_state(REDRAW_CURR_FRAME);
 }
 
-//for when force refresh (R) fixes the screen,
+//for when force redraw (R) fixes the screen,
 //but setting screen REDRAW_ALL_FRAMES doesnt
 //necessary when moving frames around
 static void stoopid_redraw(Frame_T* a, Frame_T* b){
@@ -148,7 +148,7 @@ static void stoopid_redraw(Frame_T* a, Frame_T* b){
     frame_move(a, 0, 0);
     frame_resize(b, 1, 1);
     frame_move(b, 1, 1);
-    state_set_refresh_state(REDRAW_ALL_FRAMES);
+    state_set_redraw_state(REDRAW_ALL_FRAMES);
 }
 
 void screen_swap_with_master(void){
@@ -220,6 +220,6 @@ void screen_reload_all_frames(void){
 		frame_reload((Frame_T*)node->contents);
 		node = node->next;
 	}
-	state_set_refresh_state(REDRAW_ALL_FRAMES);
+	state_set_redraw_state(REDRAW_ALL_FRAMES);
 }
 

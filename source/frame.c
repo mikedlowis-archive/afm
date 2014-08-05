@@ -135,7 +135,7 @@ void frame_draw_files(Frame_T* frame){
 }
 
 
-void frame_set_highlighting(Frame_T* frame, bool highlight, bool refresh_win){
+void frame_set_highlighting(Frame_T* frame, bool highlight, bool redraw_win){
     if(frame){
         int rows,cols;
         int line = FrameTopBuffer + count_double_lines_to_idx(frame, false) + frame->workdir->idx - frame->top_index;
@@ -147,14 +147,14 @@ void frame_set_highlighting(Frame_T* frame, bool highlight, bool refresh_win){
         mvwchgat(frame->p_win, line, 1, cols-2, newattr, color, NULL);
         if(file && file->expanded) mvwchgat(frame->p_win, line+1, 1, cols-2, newattr, color, NULL);
         wmove(frame->p_win, 0, 0); //move the cursor out of the way
-        if(frame_scroll(frame)) state_set_refresh_state(REDRAW_CURR_FRAME);
-        if(refresh_win) wrefresh(frame->p_win);
+        if(frame_scroll(frame)) state_set_redraw_state(REDRAW_CURR_FRAME);
+        if(redraw_win) wrefresh(frame->p_win);
     }
 }
 
 void frame_reload(Frame_T* frame){
 	workdir_ls(frame->workdir);
 	frame_draw_files(frame);
-	state_set_refresh_state(REDRAW_CURR_FRAME);
+	state_set_redraw_state(REDRAW_CURR_FRAME);
 }
 

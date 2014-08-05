@@ -27,10 +27,10 @@ typedef struct {
 static void handle_aardvark(void) {
     if(state_get_aardvark_mode()){
         state_set_aardvark_mode(false);
-        state_set_refresh_state(REDRAW_ALL_FRAMES);
+        state_set_redraw_state(REDRAW_ALL_FRAMES);
     }else{
         state_set_aardvark_mode(true);
-        state_set_refresh_state(REDRAW_AARDVARK);
+        state_set_redraw_state(REDRAW_AARDVARK);
     }
 }
 
@@ -189,7 +189,7 @@ static void search_mode(void) {
     } else {
         workdir_seek(state_get_focused_workdir(), Key_Buffer);
     }
-    if(state_get_refresh_state() != REDRAW_COMPLETE) screen_update();
+    if(state_get_redraw_state() != REDRAW_COMPLETE) screen_update();
 }
 
 static void print_status(void) {

@@ -27,10 +27,10 @@ typedef enum {
     REDRAW_AARDVARK,
     REDRAW_CURR_FRAME,
     REDRAW_ALL_FRAMES,
-} RefreshState_T;
+} RedrawState_T;
 
-RefreshState_T state_get_refresh_state(void);
-void state_set_refresh_state(RefreshState_T state);
+RedrawState_T state_get_redraw_state(void);
+void state_set_redraw_state(RedrawState_T state);
 
 typedef enum {
     MODE_NORMAL,

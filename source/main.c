@@ -6,12 +6,12 @@
 
 void handle_signal(int sig) {
     (void) sig;
-    state_set_refresh_state(REDRAW_ALL_FRAMES);
+    state_set_redraw_state(REDRAW_ALL_FRAMES);
 }
 
 void handle_alarm(int sig) {
     (void) sig;
-    state_set_refresh_state(REDRAW_AARDVARK);
+    state_set_redraw_state(REDRAW_AARDVARK);
     alarm(1);
 }
 
@@ -24,7 +24,7 @@ int main() {
     state_set_mode(MODE_NORMAL);
     /* main loop */
     while(state_get_running()) {
-        if(state_get_refresh_state() != REDRAW_COMPLETE)
+        if(state_get_redraw_state() != REDRAW_COMPLETE)
             screen_update();
         input_handle_key(getch());
     }
